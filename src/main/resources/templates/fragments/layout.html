@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  Shared page layout. Usage in a page:
+    <html th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+  Works at 360px wide (NFR-17); colours meet WCAG 2.1 AA (see src/main/frontend/css/app.css).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">Zamu</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
+</head>
+<body class="min-h-screen bg-paper font-sans text-ink-900 antialiased">
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+    Skip to content
+</a>
+
+<header class="border-b border-gray-200 bg-white" th:if="${currentUser != null}">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <a th:href="@{/}" class="flex items-center gap-2 text-lg font-semibold text-ink-900">
+            <img th:src="@{/images/favicon.svg}" alt="" width="28" height="28">
+            <span>Zamu</span>
+            <span class="badge" th:if="${currentUser.platformStaff}">Admin console</span>
+        </a>
+        <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-sm">
+            <th:block th:if="${currentUser.platformStaff}">
+                <a th:href="@{/admin/tenants}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Tenants</a>
+                <a th:href="@{/admin/leads}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Sign-ups</a>
+            </th:block>
+            <th:block th:unless="${currentUser.platformStaff}">
+                <a th:href="@{/app}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Home</a>
+                <a th:if="${currentUser.owner}" th:href="@{/app/users}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Staff</a>
+            </th:block>
+            <form th:action="@{/logout}" method="post" class="inline">
+                <button type="submit" class="rounded-md px-3 py-2 font-medium text-ink-600 hover:bg-gray-100">
+                    Sign out<span class="sr-only" th:text="' ' + ${currentUser.name}"></span>
+                </button>
+            </form>
+        </nav>
+    </div>
+</header>
+
+<main id="main" th:replace="${content}">
+    Page content
+</main>
+
+<footer class="mx-auto max-w-6xl px-4 py-8 text-xs text-ink-600">
+    Zamu
+</footer>
+</body>
+</html>

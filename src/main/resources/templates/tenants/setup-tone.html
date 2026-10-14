@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Tone · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-xl space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+        <section class="card" aria-labelledby="tone-heading">
+            <h2 id="tone-heading" class="text-lg font-semibold">Tone and language</h2>
+            <form th:action="@{/admin/tenants/{id}/setup/tone(id=${tenant.id})}" th:object="${form}" method="post"
+                  class="mt-4 space-y-5" novalidate>
+                <fieldset>
+                    <legend class="field-label">How Zamu speaks</legend>
+                    <div class="flex flex-wrap gap-4">
+                        <label th:each="t : ${tones}" class="flex items-center gap-2 text-sm">
+                            <input type="radio" th:field="*{tone}" th:value="${t}" class="h-4 w-4 accent-brand-700">
+                            <span th:text="${t.label()}">Friendly</span>
+                        </label>
+                    </div>
+                    <p th:if="${#fields.hasErrors('tone')}" class="field-error" th:errors="*{tone}">Error</p>
+                </fieldset>
+                <fieldset>
+                    <legend class="field-label">First language</legend>
+                    <div class="flex flex-wrap gap-4">
+                        <label th:each="l : ${languages}" class="flex items-center gap-2 text-sm">
+                            <input type="radio" th:field="*{defaultLanguage}" th:value="${l}" class="h-4 w-4 accent-brand-700">
+                            <span th:text="${l.label()}">English</span>
+                        </label>
+                    </div>
+                    <p class="field-hint">Zamu always replies in the customer's language; this is used when it can't tell.</p>
+                    <p th:if="${#fields.hasErrors('defaultLanguage')}" class="field-error" th:errors="*{defaultLanguage}">Error</p>
+                </fieldset>
+                <button type="submit" class="btn-primary">Save</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

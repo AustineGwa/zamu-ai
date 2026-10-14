@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Something went wrong · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-md px-4 pt-16">
+    <section class="card">
+        <p class="text-sm font-semibold text-brand-700">Error 500</p>
+        <h1 class="mt-1 text-xl font-semibold">Something went wrong</h1>
+        <p class="mt-2 text-sm text-ink-600">It isn't you. Please try again; if it keeps happening, tell the Zamu team and quote the reference below.</p>
+        <p class="mt-3 font-mono text-xs text-ink-600" th:if="${reference}" th:text="${'Reference: ' + reference}">Reference</p>
+        <p class="mt-5"><a th:href="@{/}" class="btn-secondary">Go to the start</a></p>
+    </section>
+</main>
+</body>
+</html>

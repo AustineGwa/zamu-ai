@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Sign in · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto flex max-w-md flex-col px-4 pt-12 sm:pt-20">
+    <a th:href="@{/}" class="mb-8 flex items-center gap-3 self-start">
+        <img th:src="@{/images/favicon.svg}" alt="" width="40" height="40">
+        <span class="text-2xl font-semibold text-ink-900">Zamu</span>
+    </a>
+    <div class="card">
+        <h1 class="text-xl font-semibold">Sign in</h1>
+        <p class="mt-1 text-sm text-ink-600">We'll email you a 6-digit code. No password needed.</p>
+
+        <div class="mt-4" th:replace="~{fragments/forms :: flash}"></div>
+        <p th:if="${param.signedOut}" class="flash-success mt-4" role="status">You've signed out.</p>
+
+        <form th:action="@{/login/code}" th:object="${form}" method="post" class="mt-5 space-y-4" novalidate>
+            <div th:replace="~{fragments/forms :: globalErrors}"></div>
+            <div>
+                <label for="email" class="field-label">Email address</label>
+                <input type="email" th:field="*{email}" class="field-input" autocomplete="email" inputmode="email"
+                       autofocus required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email')} ? 'email-error' : null">
+                <p th:if="${#fields.hasErrors('email')}" id="email-error" class="field-error" th:errors="*{email}">Error</p>
+            </div>
+            <button type="submit" class="btn-primary w-full">Email me a code</button>
+        </form>
+        <p class="mt-5 text-sm text-ink-600">New to Zamu? <a th:href="@{/signup}" class="link">Sign up</a></p>
+    </div>
+</main>
+</body>
+</html>

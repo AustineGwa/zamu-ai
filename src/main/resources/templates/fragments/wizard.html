@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  Tenant setup wizard navigation (spec: Admin console, Tenant setup wizard).
+  Needs model attributes: tenant (TenantView), step (current step key).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="header" class="mb-6 space-y-4">
+    <div>
+        <a th:href="@{/admin/tenants}" class="text-sm font-medium text-brand-700 underline underline-offset-2">All tenants</a>
+        <h1 class="mt-1 text-2xl font-semibold" th:text="${tenant.displayName}">Tenant</h1>
+        <p class="text-sm text-ink-600">
+            <span th:text="${tenant.plan.label()}">Starter</span> plan ·
+            <span th:text="${tenant.status.label()}">Onboarding</span>
+        </p>
+    </div>
+    <nav aria-label="Setup steps" class="-mx-4 overflow-x-auto px-4">
+        <ol class="flex min-w-max gap-1 text-sm"
+            th:with="steps=${ {'profile','whatsapp','mpesa','calendar','services','hours','tone','staff','go-live'} },
+                     labels=${ {'Profile','WhatsApp','M-Pesa','Calendar','Services','Hours','Tone','Staff','Go-live'} }">
+            <li th:each="s, iter : ${steps}">
+                <a th:href="@{/admin/tenants/{id}/setup/{s}(id=${tenant.id}, s=${s})}"
+                   th:attr="aria-current=${s == step} ? 'step' : null"
+                   th:classappend="${s == step} ? 'bg-brand-700 text-white' : 'bg-white text-ink-900 hover:bg-gray-100'"
+                   class="block rounded-md border border-gray-200 px-3 py-2 font-medium">
+                    <span th:text="${iter.count} + '. ' + ${labels[iter.index]}">1. Profile</span>
+                </a>
+            </li>
+        </ol>
+    </nav>
+</div>
+</body>
+</html>

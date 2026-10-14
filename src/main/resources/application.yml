@@ -1,0 +1,174 @@
+# Zamu configuration.
+#
+# Two profiles:
+#   h2     (the default) local development: in-memory H2, demo data, login codes printed in the console.
+#          Nothing to install: run ZamuApplication from the IDE, or `mvnw spring-boot:run`.
+#   mysql  staging and production: MySQL 8.4, real email, secrets from environment variables
+#          (see .env.example). Activate with SPRING_PROFILES_ACTIVE=mysql.
+# The automated integration tests run with "mysql,test" on MySQL in Testcontainers (spec: Testing).
+spring:
+  application:
+    name: zamu
+  profiles:
+    # Used only when no profile is set, e.g. a plain IDE run.
+    default: h2
+  session:
+    # NFR-08: sessions expire after 12 hours of inactivity.
+    timeout: 12h
+    jdbc:
+      # Flyway owns the SPRING_SESSION tables (V5__shared_spring_session.sql).
+      initialize-schema: never
+  flyway:
+    enabled: true
+  thymeleaf:
+    cache: true
+  cache:
+    type: caffeine
+
+server:
+  servlet:
+    session:
+      timeout: 12h
+      cookie:
+        # NFR-07: secure, HTTP-only, same-site session cookies.
+        http-only: true
+        secure: true
+        same-site: lax
+        name: ZAMU_SESSION
+  error:
+    include-stacktrace: never
+    include-message: never
+  forward-headers-strategy: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+zamu:
+  base-url: ${ZAMU_BASE_URL:http://localhost:8080}
+  login:
+    code-validity: 10m
+    max-codes-per-hour: 5
+    max-attempts-per-code: 5
+    code-retention: 24h
+  mail:
+    from: ${ZAMU_MAIL_FROM:Zamu <no-reply@zamu.local>}
+  jobs:
+    enabled: ${ZAMU_JOBS_ENABLED:true}
+    poll-interval-ms: 1000
+    batch-size: 10
+    lease: 2m
+  bootstrap:
+    admin-name: ${ZAMU_BOOTSTRAP_ADMIN_NAME:Zamu Admin}
+  local-demo:
+    enabled: false
+  leads:
+    # Where website sign-ups are emailed. Empty means no email (they still appear under Sign-ups in the console).
+    notify-email: ""
+
+logging:
+  pattern:
+    # NFR-16: every line carries the request or job ID.
+    correlation: "[%X{requestId:-}%X{jobId:-}] "
+  include-application-name: false
+
+---
+# h2: local development (default). In-memory database that starts empty on every run, H2 twins of the
+# migrations (db/migration-h2), demo tenant and users, login codes printed in the console, public dev keys.
+# H2LocalProfileGuard refuses to start if it is combined with mysql.
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    url: jdbc:h2:mem:zamu;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  flyway:
+    # H2MigrationsMirrorTest fails the build if a MySQL migration has no H2 twin.
+    locations: classpath:db/migration-h2
+  thymeleaf:
+    cache: false
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+zamu:
+  security:
+    # Fixed, public development keys. Fine for throwaway in-memory data; never use them anywhere else.
+    encryption-key: ZGV2LW9ubHktZW5jcnlwdGlvbi1rZXktMzJieXRlcyE=
+    code-hash-key: ZGV2LW9ubHktY29kZS1oYXNoLWtleS0zMi1ieXRlcyE=
+  bootstrap:
+    admin-email: ${ZAMU_BOOTSTRAP_ADMIN_EMAIL:admin@zamu.local}
+  local-demo:
+    # Creates "Demo Clinic" with owner@demo.local and staff@demo.local on startup.
+    enabled: true
+  leads:
+    notify-email: ${ZAMU_LEADS_NOTIFY_EMAIL:sales@zamu.local}
+
+---
+# mysql: staging and production. Every secret comes from the environment; the app refuses to start without
+# ZAMU_ENCRYPTION_KEY and ZAMU_CODE_HASH_KEY.
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${ZAMU_DB_URL:jdbc:mysql://localhost:3306/zamu?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8}
+    username: ${ZAMU_DB_USERNAME:zamu}
+    password: ${ZAMU_DB_PASSWORD:zamu}
+  flyway:
+    locations: classpath:db/migration
+  mail:
+    host: ${ZAMU_SMTP_HOST:localhost}
+    port: ${ZAMU_SMTP_PORT:587}
+    username: ${ZAMU_SMTP_USERNAME:}
+    password: ${ZAMU_SMTP_PASSWORD:}
+    properties:
+      # Safe production defaults; set both to false to use Mailpit locally (compose.yaml, port 1025).
+      mail.smtp.auth: ${ZAMU_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${ZAMU_SMTP_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+server:
+  servlet:
+    session:
+      cookie:
+        # Must stay true behind HTTPS (NFR-07). Browsers accept secure cookies on http://localhost.
+        secure: ${ZAMU_COOKIE_SECURE:true}
+zamu:
+  security:
+    # 32-byte keys, Base64. Generate with: openssl rand -base64 32
+    encryption-key: ${ZAMU_ENCRYPTION_KEY:}
+    code-hash-key: ${ZAMU_CODE_HASH_KEY:}
+  bootstrap:
+    # Creates the first Zamu admin on startup when no admin exists. Leave empty to skip.
+    admin-email: ${ZAMU_BOOTSTRAP_ADMIN_EMAIL:}
+  leads:
+    notify-email: ${ZAMU_LEADS_NOTIFY_EMAIL:}
+
+---
+# test: added on top of mysql by the integration tests (AbstractMySqlIT). Testcontainers supplies the database.
+spring:
+  config:
+    activate:
+      on-profile: test
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+zamu:
+  security:
+    encryption-key: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+    code-hash-key: ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=
+  jobs:
+    # Tests drive the runner by hand so they are deterministic.
+    enabled: false

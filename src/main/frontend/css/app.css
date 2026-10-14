@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* Scan the Thymeleaf templates for class names. */
+@source "../../resources/templates";
+
+/*
+ * Zamu design tokens: a corporate blue on neutral greys, in the spirit of Microsoft's Fluent palette.
+ * WCAG 2.1 AA (NFR-17): brand-600 on white 5.4:1 (white text on brand-600 the same), brand-700 on white 6.7:1,
+ * brand-700 on brand-50 6.0:1, ink-600 on white 6.2:1 (5.7:1 on paper), danger-700 on danger-50 5.6:1.
+ */
+@theme {
+  --color-brand-50: #ebf3fc;
+  --color-brand-100: #cfe4fa;
+  --color-brand-200: #b4d6fa;
+  --color-brand-600: #0f6cbd;
+  --color-brand-700: #115ea3;
+  --color-brand-800: #0f548c;
+  --color-brand-900: #0c3b5e;
+  --color-ink-900: #242424;
+  --color-ink-700: #424242;
+  --color-ink-600: #616161;
+  --color-paper: #f5f5f5;
+  --color-danger-700: #c50f1f;
+  --color-danger-50: #fdf3f4;
+  /* WhatsApp's own colours, used only inside the chat illustration on the landing page. */
+  --color-wa-wall: #efeae2;
+  --color-wa-out: #d9fdd3;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer components {
+  .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-inverse {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary { @apply bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800; }
+  .btn-secondary { @apply border border-gray-300 bg-white text-ink-900 hover:bg-gray-50; }
+  .btn-danger { @apply border border-danger-700 bg-white text-danger-700 hover:bg-danger-50; }
+  .btn-inverse { @apply bg-white text-brand-800 hover:bg-brand-50 focus-visible:outline-white; }
+
+  .field-label { @apply mb-1 block text-sm font-semibold text-ink-900; }
+  .field-input {
+    @apply block w-full rounded-md border border-gray-400 bg-white px-3 py-2 text-base text-ink-900
+      placeholder:text-gray-500 focus:border-brand-600 focus:outline-2 focus:outline-brand-600;
+  }
+  .field-input[aria-invalid="true"] { @apply border-danger-700; }
+  .field-error { @apply mt-1 text-sm text-danger-700; }
+  .field-hint { @apply mt-1 text-sm text-ink-600; }
+
+  .card { @apply rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6; }
+
+  .flash-success { @apply rounded-md border border-brand-600 bg-brand-50 px-4 py-3 text-sm text-brand-800; }
+  .flash-error { @apply rounded-md border border-danger-700 bg-danger-50 px-4 py-3 text-sm text-danger-700; }
+
+  .table-basic { @apply w-full text-left text-sm; }
+  .table-basic th { @apply border-b border-gray-200 px-3 py-2 font-semibold text-ink-600; }
+  .table-basic td { @apply border-b border-gray-100 px-3 py-3 align-top text-ink-900; }
+
+  .badge { @apply inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-ink-900; }
+
+  .link { @apply font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800; }
+
+  /* Landing page chat illustration */
+  .chat-in, .chat-out {
+    @apply max-w-[85%] rounded-lg px-3 py-2 text-[0.9rem] leading-snug text-ink-900 shadow-[0_1px_0_rgba(0,0,0,0.08)];
+  }
+  .chat-in { @apply self-start rounded-tl-none bg-white; }
+  .chat-out { @apply self-end rounded-tr-none bg-wa-out; }
+  .chat-time { @apply mt-0.5 block text-right text-[0.7rem] text-ink-600; }
+}

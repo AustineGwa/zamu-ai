@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- Small, shared form pieces. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Flash messages after post-redirect-get. -->
+<div th:fragment="flash" class="space-y-3">
+    <p th:if="${success}" class="flash-success" role="status" th:text="${success}">Saved.</p>
+    <p th:if="${error}" class="flash-error" role="alert" th:text="${error}">Something went wrong.</p>
+</div>
+
+<!-- Errors not tied to one field (BindingResult global errors). Use inside a th:object form. -->
+<div th:fragment="globalErrors" th:if="${#fields.hasGlobalErrors()}" class="flash-error" role="alert">
+    <p th:each="message : ${#fields.globalErrors()}" th:text="${message}">Error</p>
+</div>
+
+</body>
+</html>

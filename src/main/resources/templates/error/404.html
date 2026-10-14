@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Page not found · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-md px-4 pt-16">
+    <section class="card">
+        <p class="text-sm font-semibold text-brand-700">Error 404</p>
+        <h1 class="mt-1 text-xl font-semibold">Page not found</h1>
+        <p class="mt-2 text-sm text-ink-600">That page doesn't exist, or it isn't part of your business.</p>
+        <p class="mt-5"><a th:href="@{/}" class="btn-secondary">Go to the start</a></p>
+    </section>
+</main>
+</body>
+</html>

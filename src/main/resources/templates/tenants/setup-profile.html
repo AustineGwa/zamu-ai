@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Profile · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-xl space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+        <section class="card" aria-labelledby="profile-heading">
+            <h2 id="profile-heading" class="text-lg font-semibold">Business profile</h2>
+            <form th:action="@{/admin/tenants/{id}/setup/profile(id=${tenant.id})}" th:object="${form}" method="post"
+                  class="mt-4 space-y-4" novalidate>
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div>
+                    <label for="name" class="field-label">Registered business name</label>
+                    <input type="text" th:field="*{name}" class="field-input"
+                           th:attr="aria-invalid=${#fields.hasErrors('name')},aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : null">
+                    <p th:if="${#fields.hasErrors('name')}" id="name-error" class="field-error" th:errors="*{name}">Error</p>
+                </div>
+                <div>
+                    <label for="displayName" class="field-label">Name customers use</label>
+                    <input type="text" th:field="*{displayName}" class="field-input"
+                           th:attr="aria-invalid=${#fields.hasErrors('displayName')},aria-describedby=${#fields.hasErrors('displayName')} ? 'displayName-error' : 'displayName-hint'">
+                    <p id="displayName-hint" class="field-hint">Used in the greeting: "Hello, welcome to [this name]."</p>
+                    <p th:if="${#fields.hasErrors('displayName')}" id="displayName-error" class="field-error" th:errors="*{displayName}">Error</p>
+                </div>
+                <div>
+                    <label for="plan" class="field-label">Plan</label>
+                    <select th:field="*{plan}" class="field-input">
+                        <option th:each="p : ${plans}" th:value="${p}"
+                                th:text="${p.label()} + ' · KES ' + ${#numbers.formatInteger(p.monthlyFeeKes(), 1, 'COMMA')} + ' a month'">Starter</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="conversationLimit" class="field-label">Conversations per month</label>
+                    <input type="number" min="1" th:field="*{conversationLimit}" class="field-input"
+                           th:attr="aria-invalid=${#fields.hasErrors('conversationLimit')},aria-describedby=${#fields.hasErrors('conversationLimit')} ? 'limit-error' : 'limit-hint'">
+                    <p id="limit-hint" class="field-hint">Normally the plan's limit. Extra conversations are billed, not blocked.</p>
+                    <p th:if="${#fields.hasErrors('conversationLimit')}" id="limit-error" class="field-error" th:errors="*{conversationLimit}">Error</p>
+                </div>
+                <button type="submit" class="btn-primary">Save profile</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

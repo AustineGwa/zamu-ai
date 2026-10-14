@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/site :: page(~{::title}, ~{::main})}">
+<head><title>Thanks for signing up · Zamu</title></head>
+<body>
+<main id="main" class="bg-paper">
+    <div class="mx-auto max-w-xl px-4 py-16 md:py-24">
+        <section class="card">
+            <svg class="h-10 w-10 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+            <h1 class="mt-4 font-display text-2xl font-semibold">Thanks, you're signed up</h1>
+            <p class="mt-3 text-ink-700">
+                We'll call you on the number you gave us to book your kickoff call. Have your price list, opening hours
+                and the questions customers ask most often to hand.
+            </p>
+            <p class="mt-6"><a th:href="@{/}" class="btn-secondary">Back to the home page</a></p>
+        </section>
+    </div>
+</main>
+</body>
+</html>

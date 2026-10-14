@@ -1,0 +1,22 @@
+# Local development services: MySQL 8.4 LTS and Mailpit (catches outgoing email).
+# Start with: docker compose up -d   Mailpit inbox: http://localhost:8025
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: zamu
+      MYSQL_USER: zamu
+      MYSQL_PASSWORD: zamu
+      MYSQL_ROOT_PASSWORD: root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci", "--default-time-zone=+00:00"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - zamu-mysql:/var/lib/mysql
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+volumes:
+  zamu-mysql:

@@ -1,0 +1,13 @@
+{
+  "name": "zamu-frontend",
+  "private": true,
+  "description": "Tailwind CSS build for the Zamu Thymeleaf templates",
+  "scripts": {
+    "build": "tailwindcss -i ./css/app.css -o ../resources/static/css/app.css --minify",
+    "watch": "tailwindcss -i ./css/app.css -o ../resources/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  }
+}

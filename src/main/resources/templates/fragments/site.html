@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Public website layout (landing page, sign-up). Usage:
+    <html th:replace="~{fragments/site :: page(~{::title}, ~{::main})}">
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Zamu answers your customers on WhatsApp day and night, books appointments, takes M-Pesa deposits and hands over to your team.">
+    <title th:replace="${title}">Zamu</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
+</head>
+<body class="min-h-screen bg-white font-sans text-ink-900 antialiased">
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+    Skip to content
+</a>
+
+<header class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <a th:href="@{/}" class="flex items-center gap-2 text-xl font-semibold text-ink-900">
+            <img th:src="@{/images/favicon.svg}" alt="" width="28" height="28">
+            <span>Zamu</span>
+        </a>
+        <nav aria-label="Website" class="hidden items-center gap-1 text-sm md:flex">
+            <a th:href="@{/} + '#features'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Features</a>
+            <a th:href="@{/} + '#how-it-works'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">How it works</a>
+            <a th:href="@{/} + '#pricing'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Pricing</a>
+            <a th:href="@{/} + '#faq'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">FAQ</a>
+        </nav>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/login}" class="btn-secondary">Sign in</a>
+            <a th:href="@{/signup}" class="btn-primary">Sign up</a>
+        </div>
+    </div>
+</header>
+
+<main id="main" th:replace="${content}">
+    Page content
+</main>
+
+<footer class="border-t border-gray-200 bg-paper">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-ink-600 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="font-semibold text-ink-900">Zamu</p>
+            <p>The WhatsApp receptionist for Kenyan businesses.</p>
+        </div>
+        <nav aria-label="Footer" class="flex gap-4">
+            <a th:href="@{/signup}" class="link">Sign up</a>
+            <a th:href="@{/login}" class="link">Sign in</a>
+        </nav>
+    </div>
+</footer>
+</body>
+</html>

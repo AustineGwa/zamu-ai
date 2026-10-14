@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/site :: page(~{::title}, ~{::main})}">
+<head><title>Sign up · Zamu</title></head>
+<body>
+<main id="main" class="bg-paper">
+    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-[1fr_1.2fr]">
+        <div>
+            <h1 class="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Sign up for Zamu</h1>
+            <p class="mt-4 text-lg text-ink-700">
+                Tell us about your business. We set Zamu up for you, so there's nothing to install.
+            </p>
+            <h2 class="mt-8 font-semibold">What happens next</h2>
+            <ol class="mt-3 space-y-3 text-ink-700">
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">1</span>We call you to book a one-hour kickoff call.</li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">2</span>We write your answers, and connect WhatsApp, M-Pesa and your calendar.</li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">3</span>You go live five working days after the kickoff call.</li>
+            </ol>
+            <p class="mt-8 text-sm text-ink-600">Already a client? <a th:href="@{/login}" class="link">Sign in</a></p>
+        </div>
+
+        <section class="card" aria-labelledby="form-heading">
+            <h2 id="form-heading" class="sr-only">Your details</h2>
+            <form th:action="@{/signup}" th:object="${form}" method="post" class="space-y-5" novalidate>
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                <div>
+                    <label for="businessName" class="field-label">Business name</label>
+                    <input type="text" th:field="*{businessName}" class="field-input" autocomplete="organization"
+                           th:attr="aria-invalid=${#fields.hasErrors('businessName')},aria-describedby=${#fields.hasErrors('businessName')} ? 'businessName-error' : null">
+                    <p th:if="${#fields.hasErrors('businessName')}" id="businessName-error" class="field-error" th:errors="*{businessName}">Error</p>
+                </div>
+
+                <fieldset>
+                    <legend class="field-label">Kind of business</legend>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <label th:each="t : ${businessTypes}" class="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2.5 text-sm has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                            <input type="radio" th:field="*{businessType}" th:value="${t}" class="h-4 w-4 accent-brand-600">
+                            <span th:text="${t.label()}">Clinic</span>
+                        </label>
+                    </div>
+                    <p th:if="${#fields.hasErrors('businessType')}" class="field-error" th:errors="*{businessType}">Error</p>
+                </fieldset>
+
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label for="contactName" class="field-label">Your name</label>
+                        <input type="text" th:field="*{contactName}" class="field-input" autocomplete="name"
+                               th:attr="aria-invalid=${#fields.hasErrors('contactName')},aria-describedby=${#fields.hasErrors('contactName')} ? 'contactName-error' : null">
+                        <p th:if="${#fields.hasErrors('contactName')}" id="contactName-error" class="field-error" th:errors="*{contactName}">Error</p>
+                    </div>
+                    <div>
+                        <label for="phone" class="field-label">Phone number</label>
+                        <input type="tel" th:field="*{phone}" class="field-input" autocomplete="tel" inputmode="tel" placeholder="0712 345 678"
+                               th:attr="aria-invalid=${#fields.hasErrors('phone')},aria-describedby=${#fields.hasErrors('phone')} ? 'phone-error' : null">
+                        <p th:if="${#fields.hasErrors('phone')}" id="phone-error" class="field-error" th:errors="*{phone}">Error</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="field-label">Email <span class="font-normal text-ink-600">(optional)</span></label>
+                    <input type="email" th:field="*{email}" class="field-input" autocomplete="email" inputmode="email"
+                           th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email')} ? 'email-error' : null">
+                    <p th:if="${#fields.hasErrors('email')}" id="email-error" class="field-error" th:errors="*{email}">Error</p>
+                </div>
+
+                <div>
+                    <label for="message" class="field-label">Anything we should know? <span class="font-normal text-ink-600">(optional)</span></label>
+                    <textarea th:field="*{message}" rows="3" class="field-input"
+                              placeholder="For example: we get most WhatsApp messages after 6pm, and we take deposits for root canals."
+                              th:attr="aria-invalid=${#fields.hasErrors('message')},aria-describedby=${#fields.hasErrors('message')} ? 'message-error' : null"></textarea>
+                    <p th:if="${#fields.hasErrors('message')}" id="message-error" class="field-error" th:errors="*{message}">Error</p>
+                </div>
+
+                <!-- Honeypot: hidden from people and screen readers; bots tend to fill it in. -->
+                <div class="hidden" aria-hidden="true">
+                    <label for="website">Website</label>
+                    <input type="text" th:field="*{website}" tabindex="-1" autocomplete="off">
+                </div>
+
+                <div>
+                    <label class="flex items-start gap-3 text-sm text-ink-700">
+                        <input type="checkbox" th:field="*{consent}" class="mt-0.5 h-4 w-4 accent-brand-600"
+                               th:attr="aria-invalid=${#fields.hasErrors('consent')},aria-describedby=${#fields.hasErrors('consent')} ? 'consent-error' : null">
+                        <span>Zamu may call, WhatsApp or email me about this request. We use these details only to contact you about Zamu.</span>
+                    </label>
+                    <p th:if="${#fields.hasErrors('consent')}" id="consent-error" class="field-error" th:errors="*{consent}">Error</p>
+                </div>
+
+                <button type="submit" class="btn-primary w-full text-base">Sign up</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

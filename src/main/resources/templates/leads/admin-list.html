@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Sign-ups · Zamu admin</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl space-y-6 px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold">Sign-ups</h1>
+            <p class="text-sm text-ink-600">Businesses that signed up on the website, newest first.</p>
+        </div>
+        <form th:action="@{/admin/leads}" method="get" class="flex items-end gap-2">
+            <div>
+                <label for="status-filter" class="field-label">Show</label>
+                <select id="status-filter" name="status" class="field-input">
+                    <option value="" th:selected="${selectedStatus == null}">All</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}" th:selected="${s == selectedStatus}">New</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-secondary">Filter</button>
+        </form>
+    </div>
+
+    <div th:replace="~{fragments/forms :: flash}"></div>
+
+    <p th:if="${#lists.isEmpty(leads)}" class="card text-ink-600">No sign-ups yet. They appear here as soon as someone submits the form on the home page.</p>
+
+    <ul th:unless="${#lists.isEmpty(leads)}" class="space-y-3">
+        <li th:each="l : ${leads}" class="card">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h2 class="text-lg font-semibold" th:text="${l.businessName}">Afya Bora Clinic</h2>
+                    <p class="text-sm text-ink-600">
+                        <span th:text="${l.businessType.label()}">Clinic</span>,
+                        signed up <span th:text="${T(ai.zamu.shared.time.ZamuTime).display(l.createdAt)}">Wed 14 Oct 2026, 09:00</span>
+                    </p>
+                    <p class="mt-2">
+                        <span th:text="${l.contactName}">Jane Wanjiku</span>:
+                        <a th:href="'tel:+' + ${l.phone}" class="link" th:text="${l.phoneDisplay}">0712 345 678</a>
+                        <th:block th:if="${l.email != null}">
+                            and <a th:href="'mailto:' + ${l.email}" class="link" th:text="${l.email}">jane@example.com</a>
+                        </th:block>
+                    </p>
+                    <p th:if="${l.message != null}" class="mt-2 whitespace-pre-line text-sm text-ink-700" th:text="${l.message}">Message</p>
+                </div>
+                <form th:action="@{/admin/leads/{id}/status(id=${l.id})}" method="post" class="flex items-end gap-2">
+                    <div>
+                        <label th:for="'status-' + ${l.id}" class="field-label">Status</label>
+                        <select th:id="'status-' + ${l.id}" name="status" class="field-input">
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}" th:selected="${s == l.status}">New</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-secondary">Save</button>
+                </form>
+            </div>
+        </li>
+    </ul>
+</main>
+</body>
+</html>

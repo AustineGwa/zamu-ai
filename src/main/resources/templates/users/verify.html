@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Enter your code · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto flex max-w-md flex-col px-4 pt-12 sm:pt-20">
+    <div class="card">
+        <h1 class="text-xl font-semibold">Check your email</h1>
+        <p class="mt-1 text-sm text-ink-600">
+            If <strong class="break-all text-ink-900" th:text="${email}">you@example.com</strong> has a Zamu login,
+            we've sent it a 6-digit code. It works for 10 minutes.
+        </p>
+
+        <form th:action="@{/login/verify}" th:object="${form}" method="post" class="mt-5 space-y-4" novalidate>
+            <div>
+                <label for="code" class="field-label">6-digit code</label>
+                <input type="text" th:field="*{code}" class="field-input text-center text-2xl tracking-[0.4em]"
+                       inputmode="numeric" autocomplete="one-time-code" maxlength="7" autofocus required
+                       th:attr="aria-invalid=${#fields.hasErrors('code')},aria-describedby=${#fields.hasErrors('code')} ? 'code-error' : null">
+                <p th:if="${#fields.hasErrors('code')}" id="code-error" class="field-error" th:errors="*{code}">Error</p>
+            </div>
+            <button type="submit" class="btn-primary w-full">Sign in</button>
+        </form>
+        <p class="mt-4 text-sm">
+            <a th:href="@{/login}" class="font-medium text-brand-700 underline underline-offset-2">Use a different email or get a new code</a>
+        </p>
+    </div>
+</main>
+</body>
+</html>
