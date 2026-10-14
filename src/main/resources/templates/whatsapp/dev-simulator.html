@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>WhatsApp simulator · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-xl space-y-6 px-4 py-6">
+    <div>
+        <h1 class="text-2xl font-semibold">WhatsApp simulator</h1>
+        <p class="text-sm text-ink-600">Local development only. Write as a customer; the message goes through the
+            real webhook handling, and Zamu's replies appear in the <a th:href="@{/app/inbox}" class="link">inbox</a>.</p>
+    </div>
+    <div th:replace="~{fragments/forms :: flash}"></div>
+    <p th:if="${account == null}" class="flash-error">This business has no WhatsApp connection.</p>
+    <form th:if="${account != null}" th:action="@{/dev/whatsapp}" method="post" class="card space-y-4">
+        <p class="text-sm">To: <strong th:text="${account.displayPhone}">+254 700 000 000</strong></p>
+        <div>
+            <label for="phone" class="field-label">Customer's number</label>
+            <input id="phone" name="phone" class="field-input" th:value="${phone != null ? phone : '0712 345 678'}">
+        </div>
+        <div>
+            <label for="name" class="field-label">Customer's WhatsApp name</label>
+            <input id="name" name="name" class="field-input" th:value="${name != null ? name : 'Wanjiku'}">
+        </div>
+        <fieldset>
+            <legend class="field-label">Message type</legend>
+            <div class="flex gap-4 text-sm">
+                <label class="flex items-center gap-2"><input type="radio" name="kind" value="text" checked class="h-4 w-4 accent-brand-700"> Text</label>
+                <label class="flex items-center gap-2"><input type="radio" name="kind" value="image" class="h-4 w-4 accent-brand-700"> Photo</label>
+            </div>
+        </fieldset>
+        <div>
+            <label for="text" class="field-label">Message</label>
+            <textarea id="text" name="text" rows="3" class="field-input" placeholder="Habari, mnafungua saa ngapi?"></textarea>
+            <p class="field-hint">Try "person" or "mtu" to ask for staff, or "stop" to opt out.</p>
+        </div>
+        <button type="submit" class="btn-primary">Send as customer</button>
+    </form>
+</main>
+</body>
+</html>

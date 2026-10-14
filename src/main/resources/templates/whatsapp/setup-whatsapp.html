@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>WhatsApp · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="grid gap-6 lg:grid-cols-2">
+        <div class="space-y-6">
+            <div th:replace="~{fragments/forms :: flash}"></div>
+            <section class="card" aria-labelledby="wa-heading">
+                <h2 id="wa-heading" class="text-lg font-semibold">WhatsApp number</h2>
+                <p class="mt-1 text-sm text-ink-600">From Meta Business Manager, WhatsApp Manager and the app's
+                    API setup page. Use a system user's permanent token, not the 24-hour test token.</p>
+                <form th:action="@{/admin/tenants/{id}/setup/whatsapp(id=${tenant.id})}" th:object="${form}"
+                      method="post" class="mt-4 space-y-4" novalidate autocomplete="off">
+                    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                    <div>
+                        <label for="wabaId" class="field-label">WhatsApp Business Account ID</label>
+                        <input id="wabaId" th:field="*{wabaId}" inputmode="numeric" class="field-input"
+                               th:attr="aria-invalid=${#fields.hasErrors('wabaId')} ? 'true' : null">
+                        <p th:if="${#fields.hasErrors('wabaId')}" class="field-error" th:errors="*{wabaId}"></p>
+                    </div>
+                    <div>
+                        <label for="phoneNumberId" class="field-label">Phone number ID</label>
+                        <input id="phoneNumberId" th:field="*{phoneNumberId}" inputmode="numeric" class="field-input"
+                               th:attr="aria-invalid=${#fields.hasErrors('phoneNumberId')} ? 'true' : null">
+                        <p th:if="${#fields.hasErrors('phoneNumberId')}" class="field-error" th:errors="*{phoneNumberId}"></p>
+                    </div>
+                    <div>
+                        <label for="displayPhone" class="field-label">Number customers message</label>
+                        <input id="displayPhone" th:field="*{displayPhone}" class="field-input" placeholder="+254 7XX XXX XXX"
+                               th:attr="aria-invalid=${#fields.hasErrors('displayPhone')} ? 'true' : null">
+                        <p th:if="${#fields.hasErrors('displayPhone')}" class="field-error" th:errors="*{displayPhone}"></p>
+                    </div>
+                    <div>
+                        <label for="accessToken" class="field-label">Access token</label>
+                        <!-- The saved token is never shown again (NFR-06). -->
+                        <input id="accessToken" name="accessToken" type="password" class="field-input" autocomplete="new-password">
+                        <p class="field-hint" th:text="${account != null} ? 'Saved and encrypted. Leave empty to keep it.' : 'Stored encrypted; it is never shown again.'">Stored encrypted.</p>
+                        <p th:if="${#fields.hasErrors('accessToken')}" class="field-error" th:errors="*{accessToken}"></p>
+                    </div>
+                    <button type="submit" class="btn-primary">Save connection</button>
+                </form>
+            </section>
+        </div>
+
+        <div class="space-y-6">
+            <section class="card" aria-labelledby="webhook-heading">
+                <h2 id="webhook-heading" class="text-lg font-semibold">Webhook</h2>
+                <p class="mt-1 text-sm text-ink-600">In the Meta app's WhatsApp configuration, set the callback URL
+                    and the verify token from Zamu's settings, then subscribe to <strong>messages</strong> and
+                    <strong>message_template_status_update</strong>.</p>
+                <p class="mt-3 break-all rounded-md bg-gray-100 px-3 py-2 font-mono text-sm" th:text="${webhookUrl}">https://…/webhooks/whatsapp</p>
+                <p class="mt-3 text-sm">
+                    Status:
+                    <strong th:if="${account != null and account.webhookVerified}" class="text-brand-800">receiving messages</strong>
+                    <strong th:unless="${account != null and account.webhookVerified}" class="text-danger-700">no message received yet</strong>
+                </p>
+                <p th:if="${account != null and account.qualityRating != null}" class="mt-1 text-sm">
+                    Quality rating: <strong th:text="${account.qualityRating}">GREEN</strong>
+                </p>
+            </section>
+            <section class="card" aria-labelledby="templates-heading">
+                <h2 id="templates-heading" class="text-lg font-semibold">Message templates</h2>
+                <p class="mt-1 text-sm text-ink-600">Staff need an approved template to message a customer after
+                    the 24-hour window closes.</p>
+                <a th:href="@{/admin/tenants/{id}/templates(id=${tenant.id})}" class="btn-secondary mt-3">Manage templates</a>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

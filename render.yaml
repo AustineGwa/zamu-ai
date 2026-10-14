@@ -1,0 +1,50 @@
+# Render Blueprint (https://render.com/docs/yaml-spec). In the Render dashboard: New > Blueprint, pick this repo.
+# Or create a Web Service by hand with runtime "Docker" and copy these settings.
+#
+# Two ways to run it:
+#   1. Quick test (default below): SPRING_PROFILES_ACTIVE=h2. In-memory database with demo data, wiped on every
+#      restart or deploy. Login codes for owner@demo.local / staff@demo.local appear in the Render logs.
+#      Fine for a demo; never for real customers.
+#   2. Real use: set SPRING_PROFILES_ACTIVE=mysql and fill in the database and SMTP variables (README, "Deploy
+#      on Render"). Render has no managed MySQL, so use an external MySQL 8.4 server. Render's free plan blocks
+#      outbound email on ports 25, 465 and 587, so login emails need a paid instance or an SMTP provider that
+#      listens on port 2525.
+services:
+  - type: web
+    name: zamu
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Frankfurt is Render's closest region to Kenya.
+    region: frankfurt
+    plan: free
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: h2
+      # Used by the mysql profile. Render generates random Base64 256-bit values, the format Zamu needs.
+      # Keep ZAMU_ENCRYPTION_KEY forever: it decrypts stored secrets such as WhatsApp tokens.
+      - key: ZAMU_ENCRYPTION_KEY
+        generateValue: true
+      - key: ZAMU_CODE_HASH_KEY
+        generateValue: true
+      # Asked for when the Blueprint is created; leave empty for the quick test.
+      - key: ZAMU_DB_URL
+        sync: false
+      - key: ZAMU_DB_USERNAME
+        sync: false
+      - key: ZAMU_DB_PASSWORD
+        sync: false
+      # Port defaults to 587; set ZAMU_SMTP_PORT=2525 in the dashboard if your provider offers it.
+      - key: ZAMU_SMTP_HOST
+        sync: false
+      - key: ZAMU_SMTP_USERNAME
+        sync: false
+      - key: ZAMU_SMTP_PASSWORD
+        sync: false
+      - key: ZAMU_BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: ZAMU_WHATSAPP_APP_SECRET
+        sync: false
+      - key: ZAMU_WHATSAPP_VERIFY_TOKEN
+        sync: false

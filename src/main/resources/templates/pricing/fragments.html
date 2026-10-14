@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  Pricing pieces shared by /pricing and the home page. Every value comes from pricing_plans (PricingPlan).
+    card(p)  one plan card; p is a PricingPlan
+    check    the "included" tick
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<svg th:fragment="check" class="h-5 w-5 shrink-0 text-brand-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/>
+</svg>
+
+<section th:fragment="card(p)"
+         class="relative flex flex-col rounded-xl bg-white p-6 shadow-sm"
+         th:classappend="${p.featured} ? 'border-2 border-brand-600 shadow-lg lg:-mt-3 lg:pb-9' : 'border border-gray-300'"
+         th:attr="aria-labelledby='plan-' + ${p.code}">
+    <p th:if="${p.badge != null}"
+       class="absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-semibold"
+       th:classappend="${p.featured} ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-800 ring-1 ring-brand-200'"
+       th:text="${p.badge}">Popular</p>
+
+    <h3 th:id="'plan-' + ${p.code}" class="text-xl font-semibold" th:text="${p.name}">Growth</h3>
+    <p class="mt-1 min-h-[3rem] text-sm text-ink-700" th:text="${p.tagline}">One assistant for your WhatsApp and your phone line.</p>
+
+    <p class="mt-5 flex items-baseline gap-1.5">
+        <span class="text-sm font-semibold text-ink-600" th:text="${p.currency}">KES</span>
+        <span class="font-display text-4xl font-semibold tracking-tight" th:text="${p.priceDisplay()}">20,000</span>
+        <span class="text-sm text-ink-600" th:text="${p.priceNote}">per month</span>
+    </p>
+    <p th:if="${p.trialLabel() != null}" class="mt-3 inline-flex w-fit items-center gap-1.5 rounded-md bg-brand-50 px-2.5 py-1 text-sm font-semibold text-brand-800">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span th:text="${p.trialLabel()}">2-week free trial</span>
+    </p>
+    <p class="mt-4 text-sm text-ink-600" th:text="${p.audience}">For busy front desks that take calls as well as chats.</p>
+
+    <ul class="mt-5 flex-1 space-y-3 border-t border-gray-200 pt-5 text-sm text-ink-900">
+        <li th:each="h : ${p.highlights}" class="flex gap-2.5">
+            <svg th:replace="~{pricing/fragments :: check}"></svg>
+            <span th:text="${h}">Everything in Starter</span>
+        </li>
+    </ul>
+
+    <a th:href="@{/signup(plan=${p.code})}"
+       th:classappend="${p.featured} ? 'btn-primary' : 'btn-secondary'"
+       class="mt-7 w-full text-base" th:text="${p.ctaLabel}">Start your 2-week free trial</a>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Hours · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+        <section class="card" aria-labelledby="hours-heading">
+            <h2 id="hours-heading" class="text-lg font-semibold">Opening and handover hours</h2>
+            <p class="mt-1 text-sm text-ink-600">
+                Times in Nairobi time. Leave a day empty when closed. Handover hours are when staff can take chats
+                from Zamu; outside them, customers are told when someone will reply. Fill in both times of a pair,
+                or neither. Empty handover hours mean no staff that day.
+            </p>
+            <form th:action="@{/admin/tenants/{id}/setup/hours(id=${tenant.id})}" th:object="${form}" method="post"
+                  class="mt-4 space-y-4" novalidate>
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div class="overflow-x-auto">
+                    <table class="table-basic min-w-[36rem]">
+                        <thead>
+                        <tr>
+                            <th scope="col">Day</th>
+                            <th scope="col">Opens</th>
+                            <th scope="col">Closes</th>
+                            <th scope="col">Staff from</th>
+                            <th scope="col">Staff until</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="day, iter : ${dayNames}" th:with="i=${iter.index}">
+                            <th scope="row" class="font-semibold" th:text="${day}">Monday</th>
+                            <td>
+                                <input type="time" th:field="*{days[__${i}__].opensAt}" class="field-input"
+                                       th:attr="aria-label=${day} + ' opens'">
+                                <p th:if="${#fields.hasErrors('days[__${i}__].opensAt')}" class="field-error" th:errors="*{days[__${i}__].opensAt}"></p>
+                            </td>
+                            <td>
+                                <input type="time" th:field="*{days[__${i}__].closesAt}" class="field-input"
+                                       th:attr="aria-label=${day} + ' closes'">
+                                <p th:if="${#fields.hasErrors('days[__${i}__].closesAt')}" class="field-error" th:errors="*{days[__${i}__].closesAt}"></p>
+                            </td>
+                            <td>
+                                <input type="time" th:field="*{days[__${i}__].handoverOpensAt}" class="field-input"
+                                       th:attr="aria-label=${day} + ' staff from'">
+                                <p th:if="${#fields.hasErrors('days[__${i}__].handoverOpensAt')}" class="field-error" th:errors="*{days[__${i}__].handoverOpensAt}"></p>
+                            </td>
+                            <td>
+                                <input type="time" th:field="*{days[__${i}__].handoverClosesAt}" class="field-input"
+                                       th:attr="aria-label=${day} + ' staff until'">
+                                <p th:if="${#fields.hasErrors('days[__${i}__].handoverClosesAt')}" class="field-error" th:errors="*{days[__${i}__].handoverClosesAt}"></p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn-primary">Save hours</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

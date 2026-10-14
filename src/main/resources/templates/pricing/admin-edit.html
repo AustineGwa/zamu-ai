@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Edit plan · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-3xl space-y-6 px-4 py-6">
+    <div>
+        <a th:href="@{/admin/pricing}" class="link text-sm">Price list</a>
+        <h1 class="mt-1 text-2xl font-semibold" th:text="'Edit ' + ${plan.name}">Edit Starter</h1>
+        <p class="text-sm text-ink-600">Code <strong th:text="${plan.code}">starter</strong>, used in sign-up links. It can't be changed here.</p>
+    </div>
+    <form th:action="@{/admin/pricing/{id}(id=${plan.id})}" th:object="${form}" method="post" class="card space-y-5" novalidate>
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+        <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+                <label for="name" class="field-label">Name</label>
+                <input id="name" th:field="*{name}" class="field-input" th:attr="aria-invalid=${#fields.hasErrors('name')} ? 'true' : null">
+                <p th:if="${#fields.hasErrors('name')}" class="field-error" th:errors="*{name}"></p>
+            </div>
+            <div>
+                <label for="badge" class="field-label">Badge <span class="font-normal text-ink-600">(optional)</span></label>
+                <input id="badge" th:field="*{badge}" class="field-input" placeholder="Popular">
+                <p th:if="${#fields.hasErrors('badge')}" class="field-error" th:errors="*{badge}"></p>
+            </div>
+        </div>
+        <div>
+            <label for="tagline" class="field-label">Tagline</label>
+            <input id="tagline" th:field="*{tagline}" class="field-input" th:attr="aria-invalid=${#fields.hasErrors('tagline')} ? 'true' : null">
+            <p th:if="${#fields.hasErrors('tagline')}" class="field-error" th:errors="*{tagline}"></p>
+        </div>
+        <div>
+            <label for="audience" class="field-label">Who it's for</label>
+            <input id="audience" th:field="*{audience}" class="field-input" th:attr="aria-invalid=${#fields.hasErrors('audience')} ? 'true' : null">
+            <p th:if="${#fields.hasErrors('audience')}" class="field-error" th:errors="*{audience}"></p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-3">
+            <div>
+                <label for="monthlyPrice" class="field-label" th:text="'Price (' + ${plan.currency} + ')'">Price (KES)</label>
+                <input id="monthlyPrice" th:field="*{monthlyPrice}" inputmode="decimal" class="field-input" th:attr="aria-invalid=${#fields.hasErrors('monthlyPrice')} ? 'true' : null">
+                <p th:if="${#fields.hasErrors('monthlyPrice')}" class="field-error" th:errors="*{monthlyPrice}"></p>
+            </div>
+            <div>
+                <label for="priceNote" class="field-label">Price note</label>
+                <input id="priceNote" th:field="*{priceNote}" class="field-input" placeholder="per month">
+                <p th:if="${#fields.hasErrors('priceNote')}" class="field-error" th:errors="*{priceNote}"></p>
+            </div>
+            <div>
+                <label for="trialDays" class="field-label">Free trial (days)</label>
+                <input id="trialDays" th:field="*{trialDays}" type="number" min="0" max="365" class="field-input">
+                <p class="field-hint">7 shows as 1 week, 30 as 1 month.</p>
+                <p th:if="${#fields.hasErrors('trialDays')}" class="field-error" th:errors="*{trialDays}"></p>
+            </div>
+        </div>
+        <div>
+            <label for="highlights" class="field-label">Highlights on the card</label>
+            <textarea id="highlights" th:field="*{highlights}" rows="7" class="field-input"></textarea>
+            <p class="field-hint">One per line.</p>
+            <p th:if="${#fields.hasErrors('highlights')}" class="field-error" th:errors="*{highlights}"></p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+                <label for="ctaLabel" class="field-label">Button text</label>
+                <input id="ctaLabel" th:field="*{ctaLabel}" class="field-input">
+                <p th:if="${#fields.hasErrors('ctaLabel')}" class="field-error" th:errors="*{ctaLabel}"></p>
+            </div>
+            <div>
+                <label for="sortOrder" class="field-label">Order</label>
+                <input id="sortOrder" th:field="*{sortOrder}" type="number" min="0" class="field-input">
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-6 text-sm">
+            <label class="flex items-center gap-2"><input type="checkbox" th:field="*{featured}" class="h-4 w-4 accent-brand-600"> Featured (highlighted card)</label>
+            <label class="flex items-center gap-2"><input type="checkbox" th:field="*{active}" class="h-4 w-4 accent-brand-600"> Shown on the website</label>
+        </div>
+        <button type="submit" class="btn-primary">Save plan</button>
+    </form>
+</main>
+</body>
+</html>

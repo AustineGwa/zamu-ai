@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Conversation · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-3xl px-4 py-6" th:attr="data-conversation-id=${conversation.id}">
+    <a th:href="@{/app/inbox}" class="link text-sm">Inbox</a>
+    <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold" th:text="${conversation.displayName()}">Wanjiku</h1>
+            <p class="text-sm text-ink-600">
+                <span th:text="${conversation.phoneDisplay()}">0712 345 678</span>
+                · <span th:text="${conversation.channel.label()}">WhatsApp</span>
+                · <span th:text="${conversation.status.label()}">Zamu</span>
+                <th:block th:if="${conversation.language != null}">
+                    · <span th:text="${conversation.language == 'sw'} ? 'Swahili' : 'English'">English</span>
+                </th:block>
+            </p>
+            <p class="mt-1 flex flex-wrap gap-2">
+                <span th:if="${conversation.blocked}" class="badge bg-danger-50 text-danger-700">Blocked</span>
+                <span th:if="${conversation.optedOut}" class="badge">Opted out of marketing</span>
+            </p>
+        </div>
+        <form th:action="@{/app/customers/{id}/block(id=${conversation.customerId})}" method="post">
+            <input type="hidden" name="conversationId" th:value="${conversation.id}">
+            <input type="hidden" name="blocked" th:value="${!conversation.blocked}">
+            <button type="submit" th:class="${conversation.blocked} ? 'btn-secondary' : 'btn-danger'"
+                    th:text="${conversation.blocked} ? 'Unblock customer' : 'Block customer'">Block customer</button>
+        </form>
+    </div>
+
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+
+    <!-- Handover (HO-05): accept, hand back to Zamu, close. -->
+    <section class="card mt-4" aria-labelledby="handover-heading">
+        <h2 id="handover-heading" class="sr-only">Who is handling this chat</h2>
+        <div th:if="${handover != null and !handover.accepted()}" class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm">
+                <strong class="text-danger-700">Waiting for staff.</strong>
+                <span th:text="${handover.reason.label()}">Customer asked for a person</span>,
+                <span th:text="${T(ai.zamu.shared.time.ZamuTime).display(handover.requestedAt)}">09:00</span>.
+            </p>
+            <form th:action="@{/app/conversations/{id}/accept(id=${conversation.id})}" method="post">
+                <button type="submit" class="btn-primary">Accept chat</button>
+            </form>
+        </div>
+        <div th:if="${handover != null and handover.accepted()}" class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm">
+                <strong th:text="${handover.acceptedBy == currentUser.userId} ? 'You have this chat.' : 'A staff member has this chat.'">You have this chat.</strong>
+                Zamu won't reply while staff have it.
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <form th:action="@{/app/conversations/{id}/release(id=${conversation.id})}" method="post">
+                    <button type="submit" class="btn-secondary">Hand back to Zamu</button>
+                </form>
+                <form th:action="@{/app/conversations/{id}/close(id=${conversation.id})}" method="post">
+                    <button type="submit" class="btn-secondary">Close chat</button>
+                </form>
+            </div>
+        </div>
+        <div th:if="${handover == null}" class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm" th:text="${conversation.status.name() == 'CLOSED'} ? 'This chat is closed. A new message from the customer opens a new one.' : 'Zamu is handling this chat. Replying takes it over.'">
+                Zamu is handling this chat.
+            </p>
+            <form th:if="${conversation.status.name() != 'CLOSED'}"
+                  th:action="@{/app/conversations/{id}/close(id=${conversation.id})}" method="post">
+                <button type="submit" class="btn-secondary">Close chat</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Messages; refreshed live when app.js triggers zamu:conversation. -->
+    <section th:fragment="messages" id="messages"
+             th:attr="hx-get=@{/app/conversations/{id}/messages(id=${conversation.id})}"
+             hx-trigger="zamu:conversation from:body" hx-swap="outerHTML"
+             class="mt-4 flex flex-col gap-2 rounded-lg bg-wa-wall p-3" aria-live="polite" aria-label="Messages">
+        <p th:if="${#lists.isEmpty(conversation.messages)}" class="text-sm text-ink-600">No messages yet.</p>
+        <div th:each="m : ${conversation.messages}" th:class="${m.outbound()} ? 'chat-out' : 'chat-in'">
+            <span class="block text-xs font-semibold text-ink-700" th:text="${m.senderLabel}">Zamu</span>
+            <span th:if="${m.body != null}" class="whitespace-pre-wrap break-words" th:text="${m.body}">Habari!</span>
+            <span th:if="${m.body == null and m.mediaKind != null}" class="italic text-ink-700"
+                  th:text="'[' + ${m.mediaKind} + ' sent; open WhatsApp on the business phone to see it]'">[image]</span>
+            <span class="chat-time">
+                <span th:text="${T(ai.zamu.shared.time.ZamuTime).display(m.createdAt)}">09:00</span>
+                <th:block th:if="${m.outbound()}">
+                    · <span th:text="${m.status.label()}"
+                            th:classappend="${m.status.name() == 'FAILED'} ? 'font-semibold text-danger-700'">Sent</span>
+                    <span th:if="${m.errorCode != null}" class="text-danger-700" th:text="'(' + ${m.errorCode} + ')'">(131047)</span>
+                </th:block>
+            </span>
+        </div>
+    </section>
+
+    <!-- Reply (HO-07): free text inside the 24-hour window; approved templates any time. -->
+    <section class="card mt-4" aria-labelledby="reply-heading">
+        <h2 id="reply-heading" class="text-lg font-semibold">Reply</h2>
+        <form th:if="${conversation.windowOpen}" th:action="@{/app/conversations/{id}/messages(id=${conversation.id})}"
+              th:object="${form}" method="post" class="mt-3 space-y-3" novalidate>
+            <div th:replace="~{fragments/forms :: globalErrors}"></div>
+            <label for="text" class="sr-only">Message</label>
+            <textarea id="text" th:field="*{text}" rows="3" maxlength="4096" class="field-input"
+                      th:attr="aria-invalid=${#fields.hasErrors('text')} ? 'true' : null"
+                      placeholder="Type a reply. The customer sees it on WhatsApp."></textarea>
+            <p th:if="${#fields.hasErrors('text')}" class="field-error" th:errors="*{text}">Error</p>
+            <button type="submit" class="btn-primary">Send</button>
+        </form>
+        <div th:unless="${conversation.windowOpen}" class="mt-3 space-y-3">
+            <div th:if="${form != null}" th:object="${form}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+            </div>
+            <p class="text-sm text-ink-600">
+                The customer last wrote more than 24 hours ago, so WhatsApp only allows an approved template.
+            </p>
+        </div>
+
+        <div class="mt-5" th:unless="${#lists.isEmpty(templates)}">
+            <h3 class="text-sm font-semibold">Send a template</h3>
+            <details th:each="t, iter : ${templates}" class="mt-2 rounded-md border border-gray-200 p-3">
+                <summary class="cursor-pointer text-sm font-medium">
+                    <span th:text="${t.name}">follow_up</span> (<span th:text="${t.language}">en</span>)
+                </summary>
+                <p class="mt-2 whitespace-pre-wrap text-sm text-ink-600" th:text="${t.body}">Hello {{1}}</p>
+                <form th:action="@{/app/conversations/{id}/messages(id=${conversation.id})}" method="post" class="mt-3 space-y-3">
+                    <input type="hidden" name="templateName" th:value="${t.name}">
+                    <input type="hidden" name="templateLanguage" th:value="${t.language}">
+                    <div th:each="n : ${t.parameterCount > 0 ? #numbers.sequence(1, t.parameterCount) : {}}">
+                        <label th:for="${'tp-' + iter.index + '-' + n}" class="field-label" th:text="'Value for {{' + ${n} + '}}'">Value for {{1}}</label>
+                        <input th:id="${'tp-' + iter.index + '-' + n}" name="templateParams" required maxlength="200" class="field-input">
+                    </div>
+                    <button type="submit" class="btn-secondary">Send template</button>
+                </form>
+            </details>
+        </div>
+        <p th:if="${#lists.isEmpty(templates) and !conversation.windowOpen}" class="mt-3 text-sm text-ink-600">
+            No approved templates yet. Ask the Zamu team to add one.
+        </p>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Templates · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <a th:href="@{/admin/tenants/{id}/setup/whatsapp(id=${tenant.id})}" class="link text-sm">Back to WhatsApp setup</a>
+    <div class="mt-4 grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <section class="space-y-3" aria-labelledby="list-heading">
+            <h2 id="list-heading" class="text-lg font-semibold">WhatsApp templates</h2>
+            <div th:replace="~{fragments/forms :: flash}"></div>
+            <p th:if="${#lists.isEmpty(templates)}" class="card text-sm text-ink-600">No templates yet.</p>
+            <article th:each="t : ${templates}" class="card space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="font-semibold">
+                        <span th:text="${t.name}">follow_up</span>
+                        <span class="text-sm font-normal text-ink-600" th:text="'(' + ${t.language} + ', ' + ${t.category} + ')'">(en, utility)</span>
+                    </h3>
+                    <span class="badge" th:classappend="${t.status.name() == 'APPROVED'} ? 'bg-brand-50 text-brand-800' : (${t.status.name() == 'REJECTED'} ? 'bg-danger-50 text-danger-700' : '')"
+                          th:text="${t.status.label()}">Draft</span>
+                </div>
+                <p class="whitespace-pre-wrap text-sm" th:text="${t.body}">Hello {{1}}</p>
+                <p th:if="${t.reason != null}" class="text-sm text-danger-700" th:text="'Meta: ' + ${t.reason}">Reason</p>
+                <div class="flex flex-wrap items-end gap-3">
+                    <form th:if="${t.status.name() == 'DRAFT' or t.status.name() == 'REJECTED'}"
+                          th:action="@{/admin/tenants/{id}/templates/{tid}/submit(id=${tenant.id}, tid=${t.id})}" method="post">
+                        <button type="submit" class="btn-primary">Submit to Meta</button>
+                    </form>
+                    <details class="text-sm">
+                        <summary class="cursor-pointer font-medium text-brand-700">Record Meta's decision by hand</summary>
+                        <form th:action="@{/admin/tenants/{id}/templates/{tid}/status(id=${tenant.id}, tid=${t.id})}"
+                              method="post" class="mt-2 flex flex-wrap items-end gap-2">
+                            <div>
+                                <label th:for="${'status-' + t.id}" class="field-label">Status</label>
+                                <select th:id="${'status-' + t.id}" name="status" class="field-input">
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}"
+                                            th:selected="${s == t.status}">Approved</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label th:for="${'reason-' + t.id}" class="field-label">Reason (optional)</label>
+                                <input th:id="${'reason-' + t.id}" name="reason" maxlength="500" class="field-input">
+                            </div>
+                            <button type="submit" class="btn-secondary">Save</button>
+                        </form>
+                    </details>
+                </div>
+            </article>
+        </section>
+
+        <section class="card h-fit" aria-labelledby="new-heading">
+            <h2 id="new-heading" class="text-lg font-semibold">New template</h2>
+            <form th:action="@{/admin/tenants/{id}/templates(id=${tenant.id})}" th:object="${form}" method="post"
+                  class="mt-4 space-y-4" novalidate>
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div>
+                    <label for="name" class="field-label">Name</label>
+                    <input id="name" th:field="*{name}" class="field-input" placeholder="appointment_follow_up"
+                           th:attr="aria-invalid=${#fields.hasErrors('name')} ? 'true' : null">
+                    <p class="field-hint">Lower case letters, digits and underscores.</p>
+                    <p th:if="${#fields.hasErrors('name')}" class="field-error" th:errors="*{name}"></p>
+                </div>
+                <div>
+                    <label for="category" class="field-label">Category</label>
+                    <select id="category" th:field="*{category}" class="field-input">
+                        <option value="utility">Utility</option>
+                        <option value="marketing">Marketing</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="language" class="field-label">Language</label>
+                    <select id="language" th:field="*{language}" class="field-input">
+                        <option value="en">English</option>
+                        <option value="sw">Swahili</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="body" class="field-label">Message</label>
+                    <textarea id="body" th:field="*{body}" rows="5" maxlength="1024" class="field-input"
+                              th:attr="aria-invalid=${#fields.hasErrors('body')} ? 'true' : null"></textarea>
+                    <p class="field-hint">Use {{1}}, {{2}} for values staff fill in, such as the customer's name.</p>
+                    <p th:if="${#fields.hasErrors('body')}" class="field-error" th:errors="*{body}"></p>
+                </div>
+                <button type="submit" class="btn-primary">Save draft</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

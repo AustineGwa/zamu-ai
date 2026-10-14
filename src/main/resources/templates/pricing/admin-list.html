@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Pricing · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl space-y-6 px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Price list</h1>
+            <p class="text-sm text-ink-600">What the public pricing page and home page show. Changes appear on the website straight away.</p>
+        </div>
+        <a th:href="@{/pricing}" class="btn-secondary" target="_blank" rel="noopener">View the pricing page</a>
+    </div>
+    <div th:replace="~{fragments/forms :: flash}"></div>
+    <div class="relative overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <table class="table-basic min-w-[40rem]">
+            <thead>
+            <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Plan</th>
+                <th scope="col">Price a month</th>
+                <th scope="col">Free trial</th>
+                <th scope="col">Shown</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${plans}">
+                <td th:text="${p.sortOrder}">10</td>
+                <td>
+                    <span class="font-semibold" th:text="${p.name}">Starter</span>
+                    <span class="text-ink-600" th:text="'(' + ${p.code} + ')'">(starter)</span>
+                    <span th:if="${p.featured}" class="badge ml-1">Featured</span>
+                </td>
+                <td th:text="${p.currency} + ' ' + ${p.priceDisplay()}">KES 3,500</td>
+                <td th:text="${p.trialLabel() != null} ? ${p.trialLabel()} : 'None'">1-week free trial</td>
+                <td th:text="${p.active} ? 'Yes' : 'Hidden'">Yes</td>
+                <td class="text-right"><a th:href="@{/admin/pricing/{id}(id=${p.id})}" class="link">Edit<span class="sr-only" th:text="' ' + ${p.name}"></span></a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="text-sm text-ink-600">The comparison table and the pricing questions are kept in the database tables
+        pricing_features, pricing_plan_features and pricing_faqs.</p>
+</main>
+</body>
+</html>

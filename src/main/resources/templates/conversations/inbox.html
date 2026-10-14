@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Inbox · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Inbox</h1>
+            <p class="text-sm text-ink-600" th:if="${openHandovers > 0}">
+                <strong class="text-danger-700" th:text="${openHandovers == 1} ? '1 chat waiting for staff' : ${openHandovers} + ' chats waiting for staff'">2 chats waiting for staff</strong>
+            </p>
+            <p class="text-sm text-ink-600" th:unless="${openHandovers > 0}">No chats are waiting for staff.</p>
+        </div>
+        <form th:action="@{/app/inbox}" method="get" role="search" class="flex w-full gap-2 sm:w-auto">
+            <input type="hidden" name="status" th:value="${filter.param()}">
+            <label for="q" class="sr-only">Search by name or number</label>
+            <input id="q" name="q" type="search" th:value="${q}" placeholder="Name or number"
+                   class="field-input w-full sm:w-64">
+            <button type="submit" class="btn-secondary">Search</button>
+        </form>
+    </div>
+
+    <nav aria-label="Filter conversations" class="-mx-4 mt-4 overflow-x-auto px-4">
+        <ul class="flex min-w-max gap-1 text-sm">
+            <li th:each="f : ${filters}">
+                <a th:href="@{/app/inbox(status=${f.param()}, q=${q})}"
+                   th:attr="aria-current=${f == filter} ? 'page' : null"
+                   th:classappend="${f == filter} ? 'bg-brand-700 text-white' : 'bg-white text-ink-900 hover:bg-gray-100'"
+                   class="block rounded-md border border-gray-200 px-3 py-2 font-medium"
+                   th:text="${f.label()}">All open</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Refreshed live: app.js triggers zamu:inbox on <body> when a conversation changes. -->
+    <section th:fragment="list" id="inbox-list" class="mt-4"
+             th:attr="hx-get=@{/app/inbox/list(status=${filter.param()}, q=${q})}"
+             hx-trigger="zamu:inbox from:body" hx-swap="outerHTML" aria-live="polite" aria-label="Conversations">
+        <p th:if="${#lists.isEmpty(rows)}" class="card text-sm text-ink-600">No conversations here.</p>
+        <ul th:unless="${#lists.isEmpty(rows)}" class="divide-y divide-gray-200 overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <li th:each="r : ${rows}">
+                <a th:href="@{/app/conversations/{id}(id=${r.id})}"
+                   class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50">
+                    <div class="min-w-0">
+                        <p class="truncate font-semibold" th:text="${r.displayName()}">Wanjiku</p>
+                        <p class="text-sm text-ink-600">
+                            <span th:text="${r.phoneDisplay()}">0712 345 678</span>
+                            · <span th:text="${r.channel.label()}">WhatsApp</span>
+                            · <span th:text="${T(ai.zamu.shared.time.ZamuTime).display(r.lastMessageAt)}">Wed 14 Oct, 09:00</span>
+                        </p>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-2">
+                        <span th:if="${r.needsAttention()}" class="badge bg-danger-50 text-danger-700">Needs attention</span>
+                        <span th:unless="${r.needsAttention()}" class="badge" th:text="${r.status.label()}">Zamu</span>
+                        <span th:if="${r.unread > 0}" class="badge bg-brand-700 text-white"
+                              th:text="${r.unread}" th:attr="aria-label=${r.unread} + ' unread'">3</span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

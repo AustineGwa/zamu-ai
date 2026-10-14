@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Settings · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-3xl space-y-6 px-4 py-6">
+    <h1 class="text-2xl font-semibold">Settings</h1>
+    <div th:replace="~{fragments/forms :: flash}"></div>
+
+    <!-- MSG-09: staff-only mode -->
+    <section class="card" aria-labelledby="staff-only-heading">
+        <h2 id="staff-only-heading" class="text-lg font-semibold">Staff-only mode</h2>
+        <th:block th:switch="${tenant.status.name()}">
+            <div th:case="'STAFF_ONLY'" class="mt-2 space-y-3">
+                <p class="text-sm"><strong>On.</strong> Zamu has stopped replying. Each new chat gets the holding reply
+                    once and goes straight to the inbox.</p>
+                <form th:action="@{/app/settings/staff-only}" method="post">
+                    <input type="hidden" name="enabled" value="false">
+                    <button type="submit" class="btn-primary">Turn off: let Zamu reply again</button>
+                </form>
+            </div>
+            <div th:case="'LIVE'" class="mt-2 space-y-3">
+                <p class="text-sm"><strong>Off.</strong> Zamu is replying to customers. Turn this on if you want your
+                    team to answer every chat themselves for a while.</p>
+                <form th:action="@{/app/settings/staff-only}" method="post">
+                    <input type="hidden" name="enabled" value="true">
+                    <button type="submit" class="btn-secondary">Turn on staff-only mode</button>
+                </form>
+            </div>
+            <p th:case="*" class="mt-2 text-sm text-ink-600">
+                Available once your business is live. Status now:
+                <strong class="text-ink-900" th:text="${tenant.status.label()}">Onboarding</strong>.
+            </p>
+        </th:block>
+    </section>
+
+    <section class="card" aria-labelledby="holding-heading">
+        <h2 id="holding-heading" class="text-lg font-semibold">Holding reply</h2>
+        <p class="mt-1 text-sm text-ink-600">
+            Sent once per chat while staff-only mode is on. Leave empty to use Zamu's standard message in the
+            customer's language.
+        </p>
+        <form th:action="@{/app/settings/holding-reply}" method="post" class="mt-3 space-y-3">
+            <label for="holdingReply" class="sr-only">Holding reply</label>
+            <textarea id="holdingReply" name="holdingReply" rows="3" maxlength="500" class="field-input"
+                      th:text="${tenant.holdingReply}"></textarea>
+            <button type="submit" class="btn-primary">Save</button>
+        </form>
+    </section>
+
+    <p class="text-sm text-ink-600">
+        To change opening hours, handover hours or holidays, contact the Zamu team.
+    </p>
+</main>
+</body>
+</html>
