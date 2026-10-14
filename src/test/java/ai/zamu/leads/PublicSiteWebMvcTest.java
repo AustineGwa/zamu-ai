@@ -1,7 +1,12 @@
 package ai.zamu.leads;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -10,6 +15,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import ai.zamu.pricing.PricingCatalog;
+import ai.zamu.pricing.PricingPlan;
+import ai.zamu.pricing.PricingService;
 import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.security.SecurityConfig;
 import ai.zamu.shared.security.ZamuPrincipal;
@@ -39,14 +47,33 @@ class PublicSiteWebMvcTest {
     @MockitoBean
     LeadService leads;
 
+    @MockitoBean
+    PricingService pricing;
+
+    static final PricingPlan GROWTH = new PricingPlan(UUID.randomUUID(), "growth", "Growth", "Calls and chats.",
+            "For busy front desks.", new BigDecimal("20000.00"), "KES", "per month", 14,
+            List.of("Everything in Starter", "Voice receptionist"), "Start your 2-week free trial", "Popular", false, 20, true);
+
+    @BeforeEach
+    void priceList() {
+        when(pricing.catalog()).thenReturn(new PricingCatalog(List.of(GROWTH),
+                List.of(new PricingCatalog.ComparisonGroup("Channels",
+                        List.of(new PricingCatalog.ComparisonRow("Voice", Map.of("growth", "yes"))))),
+                List.of(new PricingCatalog.Faq("How does the free trial work?", "No payment is needed to start."))));
+        when(pricing.findActive("growth")).thenReturn(Optional.of(GROWTH));
+    }
+
     @Test
     void visitorsSeeTheLandingPageWithSignUpAndSignIn() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Never miss a customer on WhatsApp again")))
+                .andExpect(content().string(containsString("Zamu answers every call and every WhatsApp")))
+                .andExpect(content().string(containsString("Phone calls, answered")))
                 .andExpect(content().string(containsString("href=\"/signup\"")))
                 .andExpect(content().string(containsString("href=\"/login\"")))
-                .andExpect(content().string(containsString("KES 15,000")));
+                .andExpect(content().string(containsString("20,000")))
+                .andExpect(content().string(containsString("2-week free trial")))
+                .andExpect(content().string(containsString("href=\"/pricing\"")));
     }
 
     @Test
@@ -55,6 +82,17 @@ class PublicSiteWebMvcTest {
         ZamuPrincipal admin = new ZamuPrincipal(UUID.randomUUID(), null, ZamuRole.ADMIN, "a@zamu.test", "A");
         mvc.perform(get("/").with(as(owner))).andExpect(redirectedUrl("/app"));
         mvc.perform(get("/").with(as(admin))).andExpect(redirectedUrl("/admin/tenants"));
+    }
+
+    @Test
+    void choosingAPlanOnThePricingPageCarriesItToTheSignUpForm() throws Exception {
+        mvc.perform(get("/signup").param("plan", "growth"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-chosen-plan=\"growth\"")))
+                .andExpect(content().string(containsString("2-week free trial")));
+        mvc.perform(get("/signup").param("plan", "no-such-plan"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("data-chosen-plan"))));
     }
 
     @Test

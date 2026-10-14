@@ -1,18 +1,1 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
-<head><title>Home · Zamu</title></head>
-<body>
-<main id="main" class="mx-auto max-w-6xl space-y-6 px-4 py-6">
-    <h1 class="text-2xl font-semibold">Karibu, <span th:text="${currentUser.name}">Jane</span></h1>
-    <section class="card max-w-xl">
-        <h2 class="text-lg font-semibold">Your inbox is coming</h2>
-        <p class="mt-2 text-sm text-ink-600">
-            Customer chats, handovers, bookings and payments will appear here as Zamu goes live for your business.
-        </p>
-        <p class="mt-4" th:if="${currentUser.owner}">
-            <a th:href="@{/app/users}" class="btn-secondary">Manage staff logins</a>
-        </p>
-    </section>
-</main>
-</body>
-</html>
+<!-- Unused since Milestone 2 (/app now opens the inbox). Safe to delete this file and its folder. -->

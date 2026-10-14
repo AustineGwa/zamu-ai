@@ -92,6 +92,22 @@ class TenantRepository {
                 .update();
     }
 
+    int updateStatus(TenantId tenantId, TenantStatus status, Instant now) {
+        return jdbc.sql("UPDATE tenants SET status = :status, updated_at = :now WHERE id = :id")
+                .param("id", tenantId.bytes())
+                .param("status", status.dbValue())
+                .param("now", ZamuTime.toDb(now))
+                .update();
+    }
+
+    int updateHoldingReply(TenantId tenantId, String holdingReply, Instant now) {
+        return jdbc.sql("UPDATE tenants SET holding_reply = :holdingReply, updated_at = :now WHERE id = :id")
+                .param("id", tenantId.bytes())
+                .param("holdingReply", holdingReply)
+                .param("now", ZamuTime.toDb(now))
+                .update();
+    }
+
     int updateTone(TenantId tenantId, TenantTone tone, TenantLanguage language, Instant now) {
         return jdbc.sql("""
                 UPDATE tenants SET tone = :tone, default_language = :language, updated_at = :now

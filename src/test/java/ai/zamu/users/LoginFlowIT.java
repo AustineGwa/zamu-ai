@@ -143,11 +143,11 @@ class LoginFlowIT extends AbstractMySqlIT {
     void disablingAUserEndsTheirSessionsImmediately() throws Exception {
         requestCode("staff@afya.test");
         submitCode(emails.latestCodeFor("staff@afya.test").orElseThrow());
-        assertThat(browser.perform(get("/app")).getResponse().getStatus()).isEqualTo(200);
+        assertThat(browser.perform(get("/app/inbox")).getResponse().getStatus()).isEqualTo(200);
 
         users.disable(fx.idA(), fx.staffA().id(), fx.ownerA().id());
 
-        assertThat(browser.perform(get("/app")).getResponse().getRedirectedUrl()).endsWith("/login");
+        assertThat(browser.perform(get("/app/inbox")).getResponse().getRedirectedUrl()).endsWith("/login");
     }
 
     @Test

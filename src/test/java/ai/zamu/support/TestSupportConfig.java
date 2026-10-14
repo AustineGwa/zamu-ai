@@ -2,12 +2,16 @@ package ai.zamu.support;
 
 import java.time.Instant;
 
+import ai.zamu.shared.jobs.JobDrain;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 /** Replaces the clock and the email sender for integration tests. */
 @TestConfiguration(proxyBeanMethods = false)
+@Import(JobDrain.class)
 public class TestSupportConfig {
 
     /** 14 October 2026, 06:00 UTC (09:00 in Nairobi). */

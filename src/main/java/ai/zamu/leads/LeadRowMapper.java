@@ -11,7 +11,7 @@ import ai.zamu.shared.time.ZamuTime;
 class LeadRowMapper implements RowMapper<Lead> {
 
     static final String COLUMNS = """
-            id, business_name, contact_name, phone, email, business_type, message, status, consent_at,
+            id, business_name, contact_name, phone, email, business_type, message, plan_code, status, consent_at,
             created_at, updated_at""";
 
     static final LeadRowMapper INSTANCE = new LeadRowMapper();
@@ -26,6 +26,7 @@ class LeadRowMapper implements RowMapper<Lead> {
                 rs.getString("email"),
                 BusinessType.fromDb(rs.getString("business_type")),
                 rs.getString("message"),
+                rs.getString("plan_code"),
                 LeadStatus.fromDb(rs.getString("status")),
                 ZamuTime.read(rs, "consent_at"),
                 ZamuTime.read(rs, "created_at"),

@@ -25,6 +25,7 @@ class LeadServiceIT extends AbstractMySqlIT {
         LeadView lead = leads.signUp(form("0712 345 678"));
 
         assertThat(lead.phone()).isEqualTo("254712345678");
+        assertThat(lead.planCode()).as("plan chosen on the pricing page").isEqualTo("growth");
         assertThat(leads.recent(LeadStatus.NEW)).extracting(LeadView::businessName).containsExactly("Afya Bora Clinic");
         String payload = jdbc.sql("SELECT payload FROM jobs WHERE type = 'notify_new_lead'").query(String.class).single();
         assertThat(payload).as("only the id goes in the job (NFR-13)").contains(lead.id().toString()).doesNotContain("0712");
@@ -44,7 +45,7 @@ class LeadServiceIT extends AbstractMySqlIT {
                 "{\"leadId\":\"" + lead.id() + "\"}", 1, 5, null));
 
         assertThat(emails.sentTo("sales@zamu.test")).singleElement()
-                .satisfies(m -> assertThat(m.textBody()).contains("Afya Bora Clinic", "0712 345 678"));
+                .satisfies(m -> assertThat(m.textBody()).contains("Afya Bora Clinic", "0712 345 678", "growth"));
     }
 
     @Test
@@ -59,6 +60,6 @@ class LeadServiceIT extends AbstractMySqlIT {
 
     private static SignUpForm form(String phone) {
         return new SignUpForm("Afya Bora Clinic", "Jane Wanjiku", phone, "", BusinessType.CLINIC,
-                "Busy after 6pm", true, "");
+                "Busy after 6pm", true, "", "growth");
     }
 }

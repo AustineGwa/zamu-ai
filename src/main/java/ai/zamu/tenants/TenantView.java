@@ -16,5 +16,11 @@ public record TenantView(
         TenantTone tone,
         int conversationLimit,
         BigDecimal confidenceThreshold,
+        String holdingReply,
         Instant createdAt) {
+
+    /** Zamu replies to customers only while the tenant is onboarding (testing) or live (MSG-09). */
+    public boolean botActive() {
+        return status == TenantStatus.ONBOARDING || status == TenantStatus.LIVE;
+    }
 }

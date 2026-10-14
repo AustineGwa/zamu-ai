@@ -18,6 +18,7 @@ record Tenant(
         TenantTone tone,
         int conversationLimit,
         BigDecimal confidenceThreshold,
+        String holdingReply,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -27,6 +28,6 @@ record Tenant(
 
     TenantView toView() {
         return new TenantView(id, name, displayName, plan, status, timezone, defaultLanguage, tone,
-                conversationLimit, confidenceThreshold, createdAt);
+                conversationLimit, confidenceThreshold, holdingReply, createdAt);
     }
 }

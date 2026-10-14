@@ -27,9 +27,9 @@ class LeadRepository {
     @CrossTenant(WHY)
     void insert(Lead lead) {
         jdbc.sql("""
-                INSERT INTO leads (id, business_name, contact_name, phone, email, business_type, message, status,
+                INSERT INTO leads (id, business_name, contact_name, phone, email, business_type, message, plan_code, status,
                                    consent_at, created_at, updated_at)
-                VALUES (:id, :businessName, :contactName, :phone, :email, :businessType, :message, :status,
+                VALUES (:id, :businessName, :contactName, :phone, :email, :businessType, :message, :planCode, :status,
                         :consentAt, :createdAt, :updatedAt)
                 """)
                 .param("id", Uuids.toBytes(lead.id()))
@@ -39,6 +39,7 @@ class LeadRepository {
                 .param("email", lead.email())
                 .param("businessType", lead.businessType().dbValue())
                 .param("message", lead.message())
+                .param("planCode", lead.planCode())
                 .param("status", lead.status().dbValue())
                 .param("consentAt", ZamuTime.toDb(lead.consentAt()))
                 .param("createdAt", ZamuTime.toDb(lead.createdAt()))

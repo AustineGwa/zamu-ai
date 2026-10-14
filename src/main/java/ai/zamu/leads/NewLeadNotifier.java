@@ -55,6 +55,7 @@ class NewLeadNotifier implements JobHandler {
                 Contact:   %s
                 Phone:     %s
                 Email:     %s
+                Plan:      %s
                 Received:  %s
 
                 %s
@@ -62,7 +63,7 @@ class NewLeadNotifier implements JobHandler {
                 Open the leads list: %s/admin/leads
                 """.formatted(lead.businessName(), lead.businessType().label(), lead.contactName(),
                 lead.toView().phoneDisplay(), lead.email() == null ? "not given" : lead.email(),
-                ZamuTime.display(lead.createdAt()), lead.message() == null ? "" : lead.message(), baseUrl);
+                lead.planCode() == null ? "not chosen" : lead.planCode(), ZamuTime.display(lead.createdAt()), lead.message() == null ? "" : lead.message(), baseUrl);
         email.send(new EmailMessage(notifyEmail, "New Zamu sign-up: " + lead.businessName(), body));
     }
 }

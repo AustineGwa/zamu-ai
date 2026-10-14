@@ -7,8 +7,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import ai.zamu.pricing.PricingService;
 
 /**
  * Public sign-up (lead generation): GET/POST /signup, GET /signup/thanks. Zamu is set up for each business by the
@@ -19,18 +22,21 @@ class SignUpController {
 
     private final LeadService leads;
     private final SignUpRateLimiter rateLimiter;
+    private final PricingService pricing;
 
-    SignUpController(LeadService leads, SignUpRateLimiter rateLimiter) {
+    SignUpController(LeadService leads, SignUpRateLimiter rateLimiter, PricingService pricing) {
         this.leads = leads;
         this.rateLimiter = rateLimiter;
+        this.pricing = pricing;
     }
 
+    /** {@code plan} comes from the pricing page's buttons, e.g. /signup?plan=growth; unknown codes are ignored. */
     @GetMapping("/signup")
-    String form(Model model) {
+    String form(@RequestParam(required = false) String plan, Model model) {
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", SignUpForm.empty());
+            model.addAttribute("form", SignUpForm.withPlan(pricing.findActive(plan).map(p -> p.code()).orElse(null)));
         }
-        model.addAttribute("businessTypes", BusinessType.values());
+        addChoices(model);
         return "leads/signup";
     }
 
@@ -52,8 +58,13 @@ class SignUpController {
                 }
             }
         }
-        model.addAttribute("businessTypes", BusinessType.values());
+        addChoices(model);
         return "leads/signup";
+    }
+
+    private void addChoices(Model model) {
+        model.addAttribute("businessTypes", BusinessType.values());
+        model.addAttribute("plans", pricing.catalog().plans());
     }
 
     @GetMapping("/signup/thanks")

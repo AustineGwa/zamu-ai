@@ -27,6 +27,7 @@ class LeadAdminController {
         model.addAttribute("leads", leads.recent(status));
         model.addAttribute("statuses", LeadStatus.values());
         model.addAttribute("selectedStatus", status);
+        model.addAttribute("planNames", leads.planNames());
         return "leads/admin-list";
     }
 

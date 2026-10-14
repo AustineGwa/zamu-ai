@@ -18,9 +18,15 @@ public record SignUpForm(
         @NotNull(message = "Choose the kind of business") BusinessType businessType,
         @Size(max = 1000, message = "Keep this under 1,000 characters") String message,
         @AssertTrue(message = "Tick the box so we can contact you") boolean consent,
-        String website) {
+        String website,
+        @Size(max = 32) String planCode) {
 
     static SignUpForm empty() {
-        return new SignUpForm("", "", "", "", null, "", false, "");
+        return withPlan(null);
+    }
+
+    /** An empty form with the plan chosen on the pricing page (/signup?plan=growth). */
+    static SignUpForm withPlan(String planCode) {
+        return new SignUpForm("", "", "", "", null, "", false, "", planCode);
     }
 }

@@ -8,6 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import ai.zamu.conversations.Channel;
+import ai.zamu.conversations.ConversationService;
+import ai.zamu.conversations.InboundMessage;
+import ai.zamu.conversations.MessageType;
+import ai.zamu.shared.ids.TenantId;
+import ai.zamu.shared.ids.Uuids;
 import ai.zamu.shared.security.ZamuPrincipal;
 import ai.zamu.shared.security.ZamuRole;
 import ai.zamu.tenants.TenantService;
@@ -36,6 +42,9 @@ class TenantIsolationIT extends AbstractMySqlIT {
 
     @Autowired
     UserService users;
+
+    @Autowired
+    ConversationService conversations;
 
     TenantFixture fx;
 
@@ -98,5 +107,69 @@ class TenantIsolationIT extends AbstractMySqlIT {
     void anonymousVisitorsAreSentToLogin() throws Exception {
         mvc.perform(get("/app/users")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/admin/tenants")).andExpect(status().is3xxRedirection());
+    }
+
+    // ---- Milestone 2: inbox, conversations, handovers, settings, WhatsApp admin ----------------------
+
+    @Test
+    void NFR_09_ownerOfTenantA_seesOnlyTheirOwnInbox() throws Exception {
+        customerWrites(fx.idA(), "254711111111", "Akinyi");
+        customerWrites(fx.idB(), "254722222222", "Brenda");
+        mvc.perform(get("/app/inbox").with(as(fx.staffA(), fx.tenantA())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Akinyi")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Brenda"))));
+        mvc.perform(get("/app/inbox/list").param("q", "Brenda").with(as(fx.staffA(), fx.tenantA())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Brenda"))));
+    }
+
+    @Test
+    void NFR_09_userOfTenantA_getsNotFoundForTenantBsConversation() throws Exception {
+        UUID conversationOfB = customerWrites(fx.idB(), "254722222222", "Brenda");
+        UUID customerOfB = jdbc.sql("SELECT customer_id FROM conversations WHERE id = ?")
+                .param(Uuids.toBytes(conversationOfB)).query((rs, n) -> Uuids.read(rs, "customer_id")).single();
+        var userA = as(fx.staffA(), fx.tenantA());
+
+        mvc.perform(get("/app/conversations/{id}", conversationOfB).with(userA)).andExpect(status().isNotFound());
+        mvc.perform(get("/app/conversations/{id}/messages", conversationOfB).with(userA)).andExpect(status().isNotFound());
+        mvc.perform(post("/app/conversations/{id}/messages", conversationOfB).param("text", "hi").with(csrf()).with(userA))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/app/conversations/{id}/accept", conversationOfB).with(csrf()).with(userA))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/app/conversations/{id}/release", conversationOfB).with(csrf()).with(userA))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/app/conversations/{id}/close", conversationOfB).with(csrf()).with(userA))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/app/customers/{id}/block", customerOfB).param("blocked", "true")
+                        .param("conversationId", conversationOfB.toString()).with(csrf()).with(userA))
+                .andExpect(status().isNotFound());
+
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM messages WHERE sender = 'staff'").query(Integer.class).single()).isZero();
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM customers WHERE blocked = TRUE").query(Integer.class).single()).isZero();
+    }
+
+    @Test
+    void NFR_09_settingsAreOwnerOnlyAndWhatsAppSetupIsAdminOnly() throws Exception {
+        mvc.perform(get("/app/settings").with(as(fx.staffA(), fx.tenantA()))).andExpect(status().isForbidden());
+        mvc.perform(post("/app/settings/staff-only").param("enabled", "true").with(csrf()).with(as(fx.staffA(), fx.tenantA())))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/app/settings").with(as(fx.ownerA(), fx.tenantA()))).andExpect(status().isOk());
+        for (String path : new String[] {"/admin/tenants/{id}/setup/whatsapp", "/admin/tenants/{id}/setup/hours",
+                "/admin/tenants/{id}/templates"}) {
+            mvc.perform(get(path, fx.tenantA().id()).with(as(fx.ownerA(), fx.tenantA()))).andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void theWhatsAppSimulatorDoesNotExistOutsideLocalDevelopment() throws Exception {
+        mvc.perform(get("/dev/whatsapp").with(as(fx.ownerA(), fx.tenantA()))).andExpect(status().isNotFound());
+    }
+
+    private UUID customerWrites(TenantId tenantId, String phone, String name) {
+        conversations.receive(new InboundMessage(Channel.WHATSAPP, tenantId, phone, name, "wamid." + UUID.randomUUID(),
+                MessageType.TEXT, "Hello", null, clock.instant()));
+        return jdbc.sql("SELECT id FROM conversations WHERE tenant_id = ?").param(tenantId.bytes())
+                .query((rs, n) -> Uuids.read(rs, "id")).single();
     }
 }

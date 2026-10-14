@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 class HomeController {
 
-    /** Placeholder dashboard home until the inbox lands in Milestone 2. */
+    /** The inbox is the dashboard home (spec: Web routes). */
     @GetMapping("/app")
     String appHome() {
-        return "shared/app-home";
+        return "redirect:/app/inbox";
     }
 }

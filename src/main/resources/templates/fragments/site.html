@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Zamu answers your customers on WhatsApp day and night, books appointments, takes M-Pesa deposits and hands over to your team.">
+    <meta name="description" content="Zamu is an AI receptionist for Kenyan businesses: it answers phone calls and WhatsApp day and night, books appointments, takes M-Pesa deposits and hands over to your team.">
     <title th:replace="${title}">Zamu</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
@@ -24,14 +24,15 @@
             <span>Zamu</span>
         </a>
         <nav aria-label="Website" class="hidden items-center gap-1 text-sm md:flex">
+            <a th:href="@{/} + '#calls'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Phone calls</a>
             <a th:href="@{/} + '#features'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Features</a>
             <a th:href="@{/} + '#how-it-works'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">How it works</a>
-            <a th:href="@{/} + '#pricing'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Pricing</a>
+            <a th:href="@{/pricing}" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">Pricing</a>
             <a th:href="@{/} + '#faq'" class="rounded-md px-3 py-2 text-ink-700 hover:bg-gray-100 hover:text-ink-900">FAQ</a>
         </nav>
         <div class="flex items-center gap-2">
             <a th:href="@{/login}" class="btn-secondary">Sign in</a>
-            <a th:href="@{/signup}" class="btn-primary">Sign up</a>
+            <a th:href="@{/signup}" class="btn-primary">Start free trial</a>
         </div>
     </div>
 </header>
@@ -44,9 +45,10 @@
     <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-ink-600 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <p class="font-semibold text-ink-900">Zamu</p>
-            <p>The WhatsApp receptionist for Kenyan businesses.</p>
+            <p>The AI receptionist for phone calls and WhatsApp, made for Kenyan businesses.</p>
         </div>
         <nav aria-label="Footer" class="flex gap-4">
+            <a th:href="@{/pricing}" class="link">Pricing</a>
             <a th:href="@{/signup}" class="link">Sign up</a>
             <a th:href="@{/login}" class="link">Sign in</a>
         </nav>

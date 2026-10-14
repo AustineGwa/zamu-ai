@@ -47,7 +47,7 @@ class TenantControllerWebMvcTest {
 
     static TenantView tenant(UUID id, String displayName) {
         return new TenantView(id, displayName + " Ltd", displayName, TenantPlan.GROWTH, TenantStatus.ONBOARDING,
-                "Africa/Nairobi", TenantLanguage.EN, TenantTone.FRIENDLY, 1500, new BigDecimal("0.60"), Instant.now());
+                "Africa/Nairobi", TenantLanguage.EN, TenantTone.FRIENDLY, 1500, new BigDecimal("0.60"), null, Instant.now());
     }
 
     @Test

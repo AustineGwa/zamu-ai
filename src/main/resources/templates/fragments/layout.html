@@ -11,8 +11,16 @@
     <title th:replace="${title}">Zamu</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
+    <!-- htmx must not inject its own style element: the CSP allows stylesheets from 'self' only. -->
+    <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
+    <script th:src="@{/js/vendor/htmx-2.0.11.min.js}" defer></script>
+    <script th:src="@{/js/app.js}" defer></script>
 </head>
-<body class="min-h-screen bg-paper font-sans text-ink-900 antialiased">
+<!-- data-live: tenant users get live updates and handover alerts (app.js, GET /app/stream). -->
+<body class="min-h-screen bg-paper font-sans text-ink-900 antialiased"
+      th:attr="data-live=${currentUser != null and !currentUser.platformStaff} ? 'on' : null,
+               data-stream=${currentUser != null and !currentUser.platformStaff} ? @{/app/stream} : null,
+               data-conversation-base=@{/app/conversations/}">
 <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
     Skip to content
 </a>
@@ -28,10 +36,14 @@
             <th:block th:if="${currentUser.platformStaff}">
                 <a th:href="@{/admin/tenants}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Tenants</a>
                 <a th:href="@{/admin/leads}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Sign-ups</a>
+                <a th:href="@{/admin/pricing}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Pricing</a>
             </th:block>
             <th:block th:unless="${currentUser.platformStaff}">
-                <a th:href="@{/app}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Home</a>
+                <a th:href="@{/app/inbox}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Inbox</a>
                 <a th:if="${currentUser.owner}" th:href="@{/app/users}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Staff</a>
+                <a th:if="${currentUser.owner}" th:href="@{/app/settings}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Settings</a>
+                <button type="button" data-alerts-toggle hidden
+                        class="rounded-md px-3 py-2 font-medium text-brand-700 hover:bg-gray-100">Turn on alerts</button>
             </th:block>
             <form th:action="@{/logout}" method="post" class="inline">
                 <button type="submit" class="rounded-md px-3 py-2 font-medium text-ink-600 hover:bg-gray-100">

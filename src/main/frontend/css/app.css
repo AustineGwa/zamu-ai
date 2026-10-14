@@ -62,7 +62,7 @@
 
   .link { @apply font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800; }
 
-  /* Landing page chat illustration */
+  /* Chat bubbles: landing page illustration and the conversation page */
   .chat-in, .chat-out {
     @apply max-w-[85%] rounded-lg px-3 py-2 text-[0.9rem] leading-snug text-ink-900 shadow-[0_1px_0_rgba(0,0,0,0.08)];
   }

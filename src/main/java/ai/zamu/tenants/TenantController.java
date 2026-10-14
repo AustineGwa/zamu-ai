@@ -27,8 +27,6 @@ class TenantController {
 
     /** Wizard steps built in later milestones (spec: Delivery plan). */
     private static final Map<String, String> LATER_STEPS = Map.of(
-            "whatsapp", "Milestone 2 (WhatsApp and inbox)",
-            "hours", "Milestone 2 (WhatsApp and inbox), for handover hours",
             "calendar", "Milestone 5 (Bookings and reminders)",
             "services", "Milestone 5 (Bookings and reminders)",
             "mpesa", "Milestone 6 (M-Pesa payments)",
@@ -130,7 +128,7 @@ class TenantController {
     }
 
     /** Steps that arrive in later milestones show where they will be built. */
-    @GetMapping("/{tenantId}/setup/{step:whatsapp|hours|calendar|services|mpesa|go-live}")
+    @GetMapping("/{tenantId}/setup/{step:calendar|services|mpesa|go-live}")
     String laterStep(@PathVariable UUID tenantId, @PathVariable String step, Model model) {
         model.addAttribute("tenant", tenants.get(scope.forPath(tenantId)));
         model.addAttribute("step", step);

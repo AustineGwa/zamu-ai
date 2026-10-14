@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ai.zamu.audit.AuditEvent;
 import ai.zamu.audit.AuditService;
+import ai.zamu.pricing.PricingPlan;
+import ai.zamu.pricing.PricingService;
 import ai.zamu.shared.ids.UuidV7;
 import ai.zamu.shared.jobs.JobQueue;
 import ai.zamu.shared.jobs.NewJob;
@@ -25,12 +27,14 @@ public class LeadService {
     private final LeadRepository leads;
     private final JobQueue jobs;
     private final AuditService audit;
+    private final PricingService pricing;
     private final Clock clock;
 
-    LeadService(LeadRepository leads, JobQueue jobs, AuditService audit, Clock clock) {
+    LeadService(LeadRepository leads, JobQueue jobs, AuditService audit, PricingService pricing, Clock clock) {
         this.leads = leads;
         this.jobs = jobs;
         this.audit = audit;
+        this.pricing = pricing;
         this.clock = clock;
     }
 
@@ -47,6 +51,7 @@ public class LeadService {
                 blankToNull(form.email()),
                 form.businessType(),
                 blankToNull(form.message()),
+                pricing.findActive(form.planCode()).map(PricingPlan::code).orElse(null),
                 LeadStatus.NEW,
                 now,
                 now,
@@ -60,6 +65,11 @@ public class LeadService {
     @Transactional(readOnly = true)
     public List<LeadView> recent(LeadStatus status) {
         return leads.findRecent(status, 200).stream().map(Lead::toView).toList();
+    }
+
+    /** Plan names by code, for showing which plan a sign-up chose. */
+    public Map<String, String> planNames() {
+        return pricing.namesByCode();
     }
 
     @Transactional

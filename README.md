@@ -1,6 +1,7 @@
 # Zamu
 
-Multi-tenant WhatsApp AI receptionist for Kenyan businesses, run by the Zamu team.
+Multi-tenant WhatsApp AI receptionist for Kenyan businesses, run by the Zamu team. Voice calls are proposed
+for after version 1 (`docs/voice-channel-proposal.md`).
 The source of truth for what to build is in `docs/` (Software Requirements Specification first).
 
 Stack: Java 21, Spring Boot 4.1.1, Maven, Thymeleaf + Tailwind CSS, Spring Data JDBC / `JdbcClient`
@@ -9,7 +10,9 @@ Testcontainers. No JPA, no Redis.
 
 ## Status
 
-**Milestone 1, foundations** is in place:
+**Milestone 1, foundations** and **Milestone 2, WhatsApp and inbox** are in place. The AI step arrives in
+Milestone 3: until then Zamu greets, handles "person", "stop" and photos, and hands every question to staff
+with the "not sure" reply (AI-03).
 
 | Area | What exists |
 | --- | --- |
@@ -18,6 +21,13 @@ Testcontainers. No JPA, no Redis.
 | `users` | Email one-time-code login; authenticator-app second factor for Zamu team roles; owner staff management (`/app/users`); wizard *staff* step; first-admin bootstrap |
 | `audit` | Append-only audit log writes (logins, tenant, user and sign-up changes) |
 | `leads` | Public website: landing page at `/`, sign-up form at `/signup` (lead capture with honeypot and rate limit), email to the team, *Sign-ups* list in the admin console |
+| `whatsapp` | Signed webhook (`/webhooks/whatsapp`), routing by phone number ID, de-duplication, jobs per customer, Cloud API sending with retries, delivery statuses, message templates and Meta review status, wizard *WhatsApp* step, local customer simulator (`/dev/whatsapp`) |
+| `conversations` | Channel-neutral conversation engine (greeting, 24-hour window, staff-only mode, "person", "stop", non-text), live inbox and conversation pages with staff replies and templates, block/unblock |
+| `handovers` | Handover requests, accept / hand back / close, after-hours message, 30-minute escalation email to owners, browser alert and sound |
+| `bookings` | Opening and handover hours (wizard *Hours* step); bookings themselves arrive in Milestone 5 |
+| `reports` | Daily usage counters (billable conversations, messages in and out) |
+| `tenants` | Also: owner *Settings* page with staff-only mode and holding reply |
+| `pricing` | Public pricing page (`/pricing`) with plan cards, a feature comparison and questions, all read from the database; plan cards on the home page; *Pricing* editor in the admin console; the chosen plan is carried to the sign-up form |
 
 ## Profiles
 
@@ -40,7 +50,11 @@ Run `ai.zamu.ZamuApplication` from the IDE with no profile set, or:
 Open http://localhost:8080 for the public home page. Use **Sign in** with `owner@demo.local` or
 `staff@demo.local` ("Demo Clinic" is created on startup); the login code is **printed in the console**.
 **Sign up** submissions appear under *Sign-ups* in the admin console, and their notification email is
-printed in the console too. `admin@zamu.local` opens the admin
+printed in the console too.
+
+To try the inbox, sign in as the owner or staff, open http://localhost:8080/dev/whatsapp and write as a customer
+(try "Habari", "person" or "stop"). Nothing is sent to Meta locally; Zamu's replies appear in the inbox, which
+updates live. Click **Turn on alerts** in the header for handover notifications. `admin@zamu.local` opens the admin
 console, after you set up an authenticator app.
 
 When running from the IDE, the stylesheet comes from `src/main/resources/static/css/app.css`. After changing
@@ -59,6 +73,8 @@ $env:SPRING_PROFILES_ACTIVE = "mysql"
 $env:ZAMU_ENCRYPTION_KEY = New-Key       # keep it: it decrypts stored secrets
 $env:ZAMU_CODE_HASH_KEY = New-Key
 $env:ZAMU_BOOTSTRAP_ADMIN_EMAIL = "you@zamu.co.ke"
+$env:ZAMU_WHATSAPP_APP_SECRET = "..."      # Meta app secret: without it every webhook is rejected
+$env:ZAMU_WHATSAPP_VERIFY_TOKEN = "..."    # any long random string; enter the same in Meta
 # Local Mailpit only (production uses its SMTP provider's values):
 $env:ZAMU_SMTP_HOST = "localhost"; $env:ZAMU_SMTP_PORT = "1025"; $env:ZAMU_SMTP_AUTH = "false"; $env:ZAMU_SMTP_STARTTLS = "false"
 
@@ -67,6 +83,52 @@ $env:ZAMU_SMTP_HOST = "localhost"; $env:ZAMU_SMTP_PORT = "1025"; $env:ZAMU_SMTP_
 
 In the IDE, set the same variables in the run configuration, and set the active profile to `mysql`.
 macOS/Linux: use `openssl rand -base64 32` for the keys and `./mvnw`.
+
+## Connecting a real WhatsApp number
+
+1. In Meta Business Manager, create the app and a system user with a permanent token for the business's
+   WhatsApp Business Account.
+2. In Zamu's admin console, open the tenant's setup wizard, **WhatsApp** step, and enter the WABA ID, phone
+   number ID, display number and token (stored encrypted).
+3. In the Meta app's WhatsApp configuration, set the callback URL shown on that page and the verify token, and
+   subscribe to `messages` and `message_template_status_update`. Zamu needs to be reachable over HTTPS.
+4. Add templates under **Manage templates** and submit them for Meta's review.
+
+The Graph API version is pinned in `application.yml` (`zamu.whatsapp.graph-version`); confirm it and the request
+shapes in `RestClientWhatsAppApi` against Meta's current documentation before go-live.
+
+## Deploy with Docker (Render or any container host)
+
+The `Dockerfile` builds everything from source, including the Tailwind stylesheet, so the generated `app.css` does
+not need to be committed. The image listens on `$PORT` (Render sets it; 8080 otherwise) and its health check is
+`/actuator/health`.
+
+```powershell
+docker build -t zamu .
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=h2 zamu        # throwaway demo with in-memory data
+```
+
+### Render
+
+1. Push the repository to GitHub (including `Dockerfile`, `.dockerignore` and `render.yaml`).
+2. In Render: **New > Blueprint**, choose the repository. `render.yaml` creates a Docker web service in Frankfurt.
+   Or create a **Web Service** by hand, choose **Docker**, and set the health check path to `/actuator/health`.
+3. The first deploy uses `SPRING_PROFILES_ACTIVE=h2`: an in-memory database with the demo clinic. It is wiped on
+   every deploy, restart and (on the free plan) after 15 minutes without visitors. Sign in as `owner@demo.local`;
+   the login code is printed in the Render **Logs**. Good for a test, never for real customers.
+4. For real use, switch to `SPRING_PROFILES_ACTIVE=mysql` and set:
+   * `ZAMU_DB_URL`, `ZAMU_DB_USERNAME`, `ZAMU_DB_PASSWORD`: Render has no managed MySQL, so use an external MySQL
+     8.4 server (any provider), for example
+     `jdbc:mysql://HOST:PORT/zamu?sslMode=REQUIRED&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8`.
+   * `ZAMU_ENCRYPTION_KEY`, `ZAMU_CODE_HASH_KEY`: the Blueprint generates them. Never change the encryption key
+     after data is stored.
+   * `ZAMU_SMTP_*` and `ZAMU_MAIL_FROM`: login codes are sent by email. **Render's free plan blocks outbound
+     ports 25, 465 and 587**, so either use a paid instance or an email provider that accepts SMTP on port 2525
+     (`ZAMU_SMTP_PORT=2525`).
+   * `ZAMU_BOOTSTRAP_ADMIN_EMAIL`, and the WhatsApp variables when you connect Meta.
+   `ZAMU_BASE_URL` defaults to Render's own address (`RENDER_EXTERNAL_URL`); set it if you add a custom domain.
+5. The free plan (512 MB) runs Zamu; the JVM is limited to 75% of the container's memory. Free instances sleep
+   when idle, which also pauses background jobs and WhatsApp replies, so use a paid instance for a pilot.
 
 ## Tests
 

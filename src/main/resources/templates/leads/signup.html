@@ -7,7 +7,7 @@
         <div>
             <h1 class="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Sign up for Zamu</h1>
             <p class="mt-4 text-lg text-ink-700">
-                Tell us about your business. We set Zamu up for you, so there's nothing to install.
+                Tell us about your business. We set Zamu up for you, so there's nothing to install, and your free trial starts the day you go live.
             </p>
             <h2 class="mt-8 font-semibold">What happens next</h2>
             <ol class="mt-3 space-y-3 text-ink-700">
@@ -15,6 +15,21 @@
                 <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">2</span>We write your answers, and connect WhatsApp, M-Pesa and your calendar.</li>
                 <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">3</span>You go live five working days after the kickoff call.</li>
             </ol>
+            <!-- The plan chosen on the pricing page (/signup?plan=...), read from the database. -->
+            <th:block th:each="p : ${plans}" th:if="${form.planCode == p.code}">
+                <div class="mt-8 rounded-lg border border-brand-600 bg-white p-5" th:attr="data-chosen-plan=${p.code}">
+                    <p class="text-sm font-semibold text-brand-700">Your plan</p>
+                    <p class="mt-1 flex flex-wrap items-baseline gap-x-2">
+                        <span class="text-xl font-semibold" th:text="${p.name}">Growth</span>
+                        <span class="text-ink-700" th:text="${p.currency} + ' ' + ${p.priceDisplay()} + ' ' + ${p.priceNote}">KES 20,000 per month</span>
+                    </p>
+                    <p th:if="${p.trialLabel() != null}" class="mt-2 text-sm text-ink-700">
+                        Starts with a <strong class="text-ink-900" th:text="${p.trialLabel()}">2-week free trial</strong>
+                        from the day Zamu goes live. No payment needed to start.
+                    </p>
+                    <a th:href="@{/pricing}" class="link mt-3 inline-block text-sm">Compare plans</a>
+                </div>
+            </th:block>
             <p class="mt-8 text-sm text-ink-600">Already a client? <a th:href="@{/login}" class="link">Sign in</a></p>
         </div>
 
@@ -22,6 +37,19 @@
             <h2 id="form-heading" class="sr-only">Your details</h2>
             <form th:action="@{/signup}" th:object="${form}" method="post" class="space-y-5" novalidate>
                 <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                <fieldset th:unless="${#lists.isEmpty(plans)}">
+                    <legend class="field-label">Plan you'd like to try <span class="font-normal text-ink-600">(you can change it later)</span></legend>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <label th:each="p : ${plans}" class="flex cursor-pointer items-start gap-2 rounded-md border border-gray-300 px-3 py-2.5 text-sm has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                            <input type="radio" th:field="*{planCode}" th:value="${p.code}" class="mt-0.5 h-4 w-4 accent-brand-600">
+                            <span>
+                                <span class="block font-semibold" th:text="${p.name}">Growth</span>
+                                <span class="block text-ink-600" th:text="${p.currency} + ' ' + ${p.priceDisplay()} + (${p.trialLabel() != null} ? ' · ' + ${p.trialLabel()} : '')">KES 20,000 · 2-week free trial</span>
+                            </span>
+                        </label>
+                    </div>
+                </fieldset>
 
                 <div>
                     <label for="businessName" class="field-label">Business name</label>
@@ -86,7 +114,7 @@
                     <p th:if="${#fields.hasErrors('consent')}" id="consent-error" class="field-error" th:errors="*{consent}">Error</p>
                 </div>
 
-                <button type="submit" class="btn-primary w-full text-base">Sign up</button>
+                <button type="submit" class="btn-primary w-full text-base">Start my free trial</button>
             </form>
         </section>
     </div>

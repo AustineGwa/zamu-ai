@@ -12,7 +12,7 @@ class TenantRowMapper implements RowMapper<Tenant> {
 
     static final String COLUMNS = """
             id, name, display_name, plan, status, timezone, default_language, tone, conversation_limit,
-            confidence_threshold, created_at, updated_at""";
+            confidence_threshold, holding_reply, created_at, updated_at""";
 
     static final TenantRowMapper INSTANCE = new TenantRowMapper();
 
@@ -29,6 +29,7 @@ class TenantRowMapper implements RowMapper<Tenant> {
                 TenantTone.fromDb(rs.getString("tone")),
                 rs.getInt("conversation_limit"),
                 rs.getBigDecimal("confidence_threshold"),
+                rs.getString("holding_reply"),
                 ZamuTime.read(rs, "created_at"),
                 ZamuTime.read(rs, "updated_at"));
     }

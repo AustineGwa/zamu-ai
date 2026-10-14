@@ -39,13 +39,16 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // Public website: home page and sign-up (leads package).
-                .requestMatchers("/", "/signup", "/signup/**").permitAll()
-                .requestMatchers("/login", "/login/**", "/css/**", "/images/**", "/favicon.ico",
+                .requestMatchers("/", "/pricing", "/signup", "/signup/**").permitAll()
+                .requestMatchers("/login", "/login/**", "/css/**", "/js/**", "/images/**", "/favicon.ico",
                         "/actuator/health", "/actuator/health/**", "/error").permitAll()
                 .requestMatchers("/webhooks/**").permitAll()
+                // Local h2 profile only: the WhatsApp simulator (controller exists only in that profile).
+                .requestMatchers("/dev/**").authenticated()
                 .requestMatchers("/admin/**").hasAnyRole(ZamuRole.OPERATOR.name(), ZamuRole.ADMIN.name())
                 // Spec: Permissions. Manage staff users, reports and settings are owner-only in the dashboard.
-                .requestMatchers("/app/users", "/app/users/**").hasRole(ZamuRole.OWNER.name())
+                .requestMatchers("/app/users", "/app/users/**", "/app/settings", "/app/settings/**")
+                        .hasRole(ZamuRole.OWNER.name())
                 .requestMatchers("/app/**").hasAnyRole(ZamuRole.STAFF.name(), ZamuRole.OWNER.name())
                 .anyRequest().authenticated())
             .securityContext(context -> context.securityContextRepository(securityContextRepository))

@@ -43,7 +43,7 @@ class LeadAdminControllerWebMvcTest {
     @Test
     void operatorsSeeSignUps() throws Exception {
         when(leads.recent(null)).thenReturn(List.of(new LeadView(UUID.randomUUID(), "Afya Bora Clinic", "Jane",
-                "254712345678", "0712 345 678", null, BusinessType.CLINIC, null, LeadStatus.NEW, Instant.now())));
+                "254712345678", "0712 345 678", null, BusinessType.CLINIC, null, "growth", LeadStatus.NEW, Instant.now())));
 
         mvc.perform(get("/admin/leads").with(as(OPERATOR)))
                 .andExpect(status().isOk())

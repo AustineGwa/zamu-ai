@@ -52,6 +52,7 @@ public class TenantService {
                 TenantTone.FRIENDLY,
                 request.plan().conversationsPerMonth(),
                 DEFAULT_CONFIDENCE_THRESHOLD,
+                null,
                 now,
                 now);
         repository.insert(tenant);
@@ -94,6 +95,37 @@ public class TenantService {
         audit.record(AuditEvent.of(tenantId, "tenant.tone_updated", "tenant", tenantId.value())
                 .withBefore(before).withAfter(after));
         return after;
+    }
+
+    /**
+     * Owner's staff-only switch (spec: Settings; MSG-09). Zamu stops replying, sends the holding reply once per
+     * conversation and routes every chat to the inbox. Only a live tenant can switch to staff-only and back.
+     */
+    @Transactional
+    public TenantView setStaffOnly(TenantId tenantId, boolean staffOnly) {
+        TenantView before = get(tenantId);
+        TenantStatus target = staffOnly ? TenantStatus.STAFF_ONLY : TenantStatus.LIVE;
+        TenantStatus required = staffOnly ? TenantStatus.LIVE : TenantStatus.STAFF_ONLY;
+        if (before.status() == target) {
+            return before;
+        }
+        if (before.status() != required) {
+            throw new IllegalTenantStatusException(before.status(), target);
+        }
+        repository.updateStatus(tenantId, target, clock.instant());
+        TenantView after = get(tenantId);
+        audit.record(AuditEvent.of(tenantId, staffOnly ? "tenant.staff_only_on" : "tenant.staff_only_off", "tenant",
+                tenantId.value()).withBefore(before.status().name()).withAfter(after.status().name()));
+        return after;
+    }
+
+    /** Saves the holding reply used in staff-only and paused mode; blank means the standard wording. */
+    @Transactional
+    public TenantView updateHoldingReply(TenantId tenantId, String holdingReply) {
+        String value = holdingReply == null || holdingReply.isBlank() ? null : holdingReply.trim();
+        repository.updateHoldingReply(tenantId, value, clock.instant());
+        audit.record(AuditEvent.of(tenantId, "tenant.holding_reply_updated", "tenant", tenantId.value()));
+        return get(tenantId);
     }
 
     /**

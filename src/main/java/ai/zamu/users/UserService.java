@@ -1,6 +1,7 @@
 package ai.zamu.users;
 
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import ai.zamu.audit.AuditEvent;
 import ai.zamu.audit.AuditService;
 import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.ids.UuidV7;
+import ai.zamu.shared.security.ZamuRole;
 import ai.zamu.tenants.TenantService;
 
 /** Tenant dashboard users: list, add and disable logins. Login itself is in LoginService. */
@@ -88,6 +90,23 @@ public class UserService {
         audit.record(AuditEvent.of(tenantId, "user.disabled", "user", userId)
                 .withBefore(before.toView())
                 .withAfter(users.findInTenant(tenantId, userId).map(User::toView).orElse(null)));
+    }
+
+    /** Emails of active owners, for alerts such as handover escalation (HO-06). */
+    @Transactional(readOnly = true)
+    public List<String> activeOwnerEmails(TenantId tenantId) {
+        return users.findAllInTenant(tenantId).stream()
+                .filter(u -> u.isActive() && u.role() == ZamuRole.OWNER)
+                .map(User::email)
+                .toList();
+    }
+
+    /** Display names of this tenant's users, for sender labels in the inbox. Unknown IDs are left out. */
+    @Transactional(readOnly = true)
+    public Map<UUID, String> namesById(TenantId tenantId) {
+        Map<UUID, String> names = new HashMap<>();
+        users.findAllInTenant(tenantId).forEach(u -> names.put(u.id(), u.name()));
+        return names;
     }
 
     private void endSessions(UUID userId) {

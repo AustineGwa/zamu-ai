@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/site :: page(~{::title}, ~{::main})}">
-<head><title>Zamu: your WhatsApp receptionist, always on shift</title></head>
+<head><title>Zamu: the AI receptionist that answers your phone and your WhatsApp</title></head>
 <body>
 <main id="main">
 
@@ -8,17 +8,21 @@
     <section class="border-b border-gray-200 bg-gradient-to-b from-brand-50 to-white">
         <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 md:py-20 lg:grid-cols-[1.15fr_1fr]">
             <div>
-                <h1 class="font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
-                    Never miss a customer on WhatsApp again, even at 11pm on a Sunday.
+                <p class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+                    New: Zamu now answers phone calls
+                </p>
+                <h1 class="mt-5 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
+                    Never miss a customer again. Zamu answers every call and every WhatsApp, day and night.
                 </h1>
                 <p class="mt-5 max-w-xl text-lg leading-relaxed text-ink-700">
-                    Zamu answers your customers on WhatsApp day and night, in English and Swahili. It books appointments
-                    into your calendar, takes deposits by M-Pesa straight to your till, and passes the chat to your team
-                    when a person is needed.
+                    Zamu is an AI receptionist that picks up calls to your business line and replies on WhatsApp, in
+                    English and Swahili. It books appointments, takes deposits by M-Pesa straight to your till, writes
+                    notes of every call, and passes the customer to your team when a person is needed.
                 </p>
                 <div class="mt-8 flex flex-wrap gap-3">
-                    <a th:href="@{/signup}" class="btn-primary px-6 text-base">Sign up</a>
-                    <a href="#how-it-works" class="btn-secondary px-6 text-base">See how it works</a>
+                    <a th:href="@{/signup}" class="btn-primary px-6 text-base">Start your free trial</a>
+                    <a th:href="@{/pricing}" class="btn-secondary px-6 text-base">See plans and pricing</a>
                 </div>
                 <p class="mt-5 text-sm text-ink-600">
                     We set it up for you, and you're live five working days after our first call.
@@ -26,7 +30,17 @@
                 </p>
             </div>
 
-            <figure class="mx-auto w-full max-w-sm">
+            <figure class="relative mx-auto w-full max-w-sm">
+                <!-- Voice: a call answered while the chat goes on. -->
+                <div class="absolute -left-4 top-24 z-10 hidden items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-xl ring-1 ring-gray-200 sm:flex lg:-left-16" aria-hidden="true">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+                    </span>
+                    <span class="leading-tight">
+                        <span class="block text-sm font-semibold text-ink-900">Call answered by Zamu</span>
+                        <span class="block text-xs text-ink-600">0722 XXX 456 · booked for Monday</span>
+                    </span>
+                </div>
                 <div class="overflow-hidden rounded-[2rem] border-[10px] border-ink-900 bg-wa-wall shadow-xl">
                     <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3">
                         <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white" aria-hidden="true">AB</span>
@@ -54,7 +68,83 @@
                     </div>
                 </div>
                 <figcaption class="mt-3 text-center text-sm text-ink-600">
-                    An example chat. The customer asks in Swahili at 11pm, books and pays a deposit in two minutes.
+                    An example WhatsApp chat, while Zamu answers a phone call at the same time. The customer asks in Swahili at 11pm, books and pays a deposit in two minutes.
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- Voice: the phone line, answered (the main difference from WhatsApp-only tools). -->
+    <section id="calls" class="scroll-mt-20 bg-brand-900 text-white">
+        <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:py-20 lg:grid-cols-[1fr_1.05fr]">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wider text-brand-200">Phone calls, answered</p>
+                <h2 class="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+                    The receptionist that picks up on the first ring, even when your line is busy
+                </h2>
+                <p class="mt-4 text-lg leading-relaxed text-brand-100">
+                    Most customers in Kenya still call. Zamu answers your existing business number with a natural voice,
+                    in English or Swahili, and does on the phone everything it does on WhatsApp.
+                </p>
+                <ul class="mt-8 space-y-4">
+                    <li class="flex gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                        <span><strong class="text-white">Answers every call at once.</strong> No queue, no voicemail, no missed customers at lunchtime or after hours.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                        <span><strong class="text-white">Books, reschedules and takes deposits during the call.</strong> It confirms the paying number aloud, sends the M-Pesa prompt, and confirms the booking by WhatsApp.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                        <span><strong class="text-white">Transfers to your staff when it matters.</strong> A caller who asks for a person, or raises something urgent, is put through to your team; out of hours, Zamu takes a message.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                        <span><strong class="text-white">Notes of every call, next to your WhatsApp chats.</strong> Who called, what they wanted and what was done, in one inbox. Written notes, not recordings.</span>
+                    </li>
+                </ul>
+                <div class="mt-9 flex flex-wrap gap-3">
+                    <a th:href="@{/signup(plan='growth')}" class="btn-inverse px-6 text-base">Try voice and WhatsApp free</a>
+                    <a th:href="@{/pricing}" class="btn px-6 text-base text-white ring-1 ring-white/60 hover:bg-white/10">Plans with voice</a>
+                </div>
+                <p class="mt-4 text-sm text-brand-200">Voice is in early access and rolling out to Growth, Business and Enterprise plans.</p>
+            </div>
+
+            <!-- Example call notes, as they appear in the Zamu inbox. -->
+            <figure class="rounded-xl bg-white p-5 text-ink-900 shadow-2xl sm:p-6">
+                <div class="flex items-center justify-between gap-3 border-b border-gray-200 pb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-700" aria-hidden="true">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+                        </span>
+                        <div class="leading-tight">
+                            <p class="font-semibold">Call from 0712 XXX 123</p>
+                            <p class="text-sm text-ink-600">Answered by Zamu · Sat 18 Oct, 7:42am · 2 min 10 s</p>
+                        </div>
+                    </div>
+                    <span class="badge bg-brand-50 text-brand-800">Booked</span>
+                </div>
+                <dl class="mt-4 space-y-3 text-sm">
+                    <div>
+                        <dt class="font-semibold text-ink-600">Summary</dt>
+                        <dd class="mt-0.5">Asked in Swahili for a dental check-up this Saturday. Booked 9:30am with Dr Otieno. Paid the KES 500 deposit by M-Pesa during the call.</dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold text-ink-600">Actions</dt>
+                        <dd class="mt-1 flex flex-wrap gap-2">
+                            <span class="rounded-md bg-gray-100 px-2 py-1">Booking: Sat 18 Oct, 9:30</span>
+                            <span class="rounded-md bg-gray-100 px-2 py-1">M-Pesa: KES 500 received</span>
+                            <span class="rounded-md bg-gray-100 px-2 py-1">WhatsApp confirmation sent</span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold text-ink-600">Language</dt>
+                        <dd class="mt-0.5">Swahili</dd>
+                    </div>
+                </dl>
+                <figcaption class="mt-5 border-t border-gray-200 pt-4 text-sm text-ink-600">
+                    An example of the notes your team sees after Zamu takes a call.
                 </figcaption>
             </figure>
         </div>
@@ -63,9 +153,14 @@
     <!-- What it does -->
     <section id="features" class="scroll-mt-20">
         <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Your front desk, on the app your customers already use</h2>
-            <p class="mt-3 max-w-2xl text-ink-700">Zamu replies under your business name, from information you approve.</p>
+            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Your whole front desk, on the phone and on WhatsApp</h2>
+            <p class="mt-3 max-w-2xl text-ink-700">Zamu answers under your business name, from information you approve, on whichever channel your customer picks.</p>
             <ul class="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+                <li class="border-t-2 border-brand-600 pt-5">
+                    <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+                    <h3 class="mt-3 text-lg font-semibold">Answers your phone line</h3>
+                    <p class="mt-2 text-ink-700">Picks up calls to your existing number, talks naturally in English or Swahili, and saves notes of every call. No more missed calls when the line is busy.</p>
+                </li>
                 <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8h8M8 11.5h5"/></svg>
                     <h3 class="mt-3 text-lg font-semibold">Answers from your own information</h3>
@@ -73,8 +168,8 @@
                 </li>
                 <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M8 13.5h3v3H8z"/></svg>
-                    <h3 class="mt-3 text-lg font-semibold">Books into your calendar</h3>
-                    <p class="mt-2 text-ink-700">Offers open slots, then books, moves and cancels appointments in your Google Calendar. It checks again before confirming, so it never double-books.</p>
+                    <h3 class="mt-3 text-lg font-semibold">Books and reminds</h3>
+                    <p class="mt-2 text-ink-700">Offers open slots, then books, moves and cancels appointments in your Google Calendar, without double-booking. A reminder the day before means fewer no-shows.</p>
                 </li>
                 <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10.5 18.5h3M12 7v6M10 9a2 2 0 0 1 2-1.5 1.8 1.8 0 0 1 2 1.5c0 1-1 1.3-2 1.5s-2 .6-2 1.6a1.9 1.9 0 0 0 2 1.4 2 2 0 0 0 2-1.4"/></svg>
@@ -82,14 +177,9 @@
                     <p class="mt-2 text-ink-700">Sends the M-Pesa prompt to the customer's phone. The money goes straight to your own till or paybill, and the booking is confirmed only when M-Pesa confirms payment.</p>
                 </li>
                 <li class="border-t-2 border-brand-600 pt-5">
-                    <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></svg>
-                    <h3 class="mt-3 text-lg font-semibold">Sends reminders</h3>
-                    <p class="mt-2 text-ink-700">A reminder the day before each appointment, with buttons to confirm, reschedule or cancel, so fewer people forget to turn up.</p>
-                </li>
-                <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M3 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M14 14.3c.8-.5 1.6-.8 2.5-.8 2.2 0 4 1.6 4.5 4"/></svg>
                     <h3 class="mt-3 text-lg font-semibold">Hands over to your team</h3>
-                    <p class="mt-2 text-ink-700">When a customer asks for a person, raises something sensitive, or Zamu isn't sure, your staff take over in the same WhatsApp chat.</p>
+                    <p class="mt-2 text-ink-700">When a customer asks for a person, raises something sensitive, or Zamu isn't sure, your staff take over the WhatsApp chat or take the transferred call.</p>
                 </li>
                 <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 5.5 5.5 7M11 5c-.6 3.4-3 6.5-6.5 8"/><path d="M13 21l4-9 4 9M14.4 18h5.2"/></svg>
@@ -103,12 +193,12 @@
     <!-- Who it's for -->
     <section class="bg-paper">
         <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Made for businesses that book and get paid on WhatsApp</h2>
+            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Made for businesses whose customers call and WhatsApp</h2>
             <div class="mt-10 divide-y divide-gray-300 border-y border-gray-300">
                 <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
                     <h3 class="text-lg font-semibold">Clinics and dental practices</h3>
-                    <p class="text-ink-700">Reception is overwhelmed, and after-hours enquiries go to the clinic down the road.</p>
-                    <p class="text-ink-900">Zamu answers fees, hours and doctor availability, books and reminds, and takes consultation deposits.</p>
+                    <p class="text-ink-700">The phone rings while reception is with a patient, and after-hours enquiries go to the clinic down the road.</p>
+                    <p class="text-ink-900">Zamu answers calls and chats about fees, hours and doctor availability, books and reminds, and takes consultation deposits.</p>
                 </div>
                 <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
                     <h3 class="text-lg font-semibold">Salons, spas and barbershops</h3>
@@ -117,8 +207,8 @@
                 </div>
                 <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
                     <h3 class="text-lg font-semibold">Schools and colleges</h3>
-                    <p class="text-ink-700">Admissions and fee questions flood one phone every January, May and September.</p>
-                    <p class="text-ink-900">Zamu answers admissions questions and shares fee structures, any time of day.</p>
+                    <p class="text-ink-700">Admissions and fee questions flood one phone line every January, May and September.</p>
+                    <p class="text-ink-900">Zamu takes every one of those calls at once, answers admissions questions and sends fee structures by WhatsApp.</p>
                 </div>
             </div>
         </div>
@@ -143,7 +233,7 @@
                 <li>
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">3</span>
                     <h3 class="mt-4 font-semibold">Connections</h3>
-                    <p class="mt-1 text-sm text-ink-700">We connect your WhatsApp number, M-Pesa till or paybill, and calendar.</p>
+                    <p class="mt-1 text-sm text-ink-700">We connect your phone line, WhatsApp number, M-Pesa till or paybill, and calendar.</p>
                 </li>
                 <li>
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">4</span>
@@ -187,50 +277,21 @@
         </div>
     </section>
 
-    <!-- Pricing -->
+    <!-- Pricing: plans from the database (pricing_plans); the full comparison is on /pricing. -->
     <section id="pricing" class="scroll-mt-20">
-        <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Plans</h2>
-            <p class="mt-3 max-w-2xl text-ink-700">
-                Monthly, in Kenyan shillings. A conversation is everything one customer says to you within 24 hours.
-                Setup is a one-off fee from KES 25,000.
-            </p>
-            <div class="mt-10 grid gap-6 lg:grid-cols-3">
-                <section th:each="p : ${plans}"
-                         th:classappend="${p.name() == 'GROWTH'} ? 'border-2 border-brand-600' : 'border border-gray-300'"
-                         class="flex flex-col rounded-lg bg-white p-6"
-                         th:attr="aria-labelledby='plan-' + ${p.name()}">
-                    <div class="flex items-baseline justify-between gap-3">
-                        <h3 th:id="'plan-' + ${p.name()}" class="text-xl font-semibold" th:text="${p.label()}">Growth</h3>
-                        <span th:if="${p.name() == 'GROWTH'}" class="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Recommended for most clinics</span>
-                    </div>
-                    <p class="mt-4">
-                        <span class="font-display text-4xl font-semibold" th:text="'KES ' + ${#numbers.formatInteger(p.monthlyFeeKes(), 1, 'COMMA')}">KES 15,000</span>
-                        <span class="text-ink-600">a month</span>
+        <div class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Start free, on the plan that fits</h2>
+                    <p class="mt-3 max-w-2xl text-ink-700">
+                        Every plan starts with a free trial and a setup done for you. Monthly, in Kenyan shillings.
                     </p>
-                    <ul class="mt-6 flex-1 space-y-2.5 text-sm text-ink-700" th:switch="${p.name()}">
-                        <li th:text="${#numbers.formatInteger(p.conversationsPerMonth(), 1, 'COMMA')} + ' conversations a month'">1,500 conversations a month</li>
-                        <th:block th:case="'STARTER'">
-                            <li>Answers and handover to your team</li>
-                            <li>Weekly report</li>
-                        </th:block>
-                        <th:block th:case="'GROWTH'">
-                            <li>Answers and handover to your team</li>
-                            <li>Bookings and reminders</li>
-                            <li>M-Pesa deposits</li>
-                            <li>Daily and weekly reports</li>
-                        </th:block>
-                        <th:block th:case="'BUSINESS'">
-                            <li>Everything in Growth</li>
-                            <li>Monthly review call</li>
-                            <li>Support every day, 7am to 9pm</li>
-                        </th:block>
-                        <li th:text="${p.staffLogins()} + ' staff logins'">5 staff logins</li>
-                    </ul>
-                    <a th:href="@{/signup}" th:classappend="${p.name() == 'GROWTH'} ? 'btn-primary' : 'btn-secondary'" class="mt-8 w-full">Sign up</a>
-                </section>
+                </div>
+                <a th:href="@{/pricing}" class="link">Compare every feature</a>
             </div>
-            <p class="mt-6 text-sm text-ink-600">Go over your limit and Zamu keeps working; extra conversations are KES 15 each.</p>
+            <div class="mt-10 grid gap-8 pt-3 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+                <th:block th:each="p : ${plans}"><section th:replace="~{pricing/fragments :: card(${p})}"></section></th:block>
+            </div>
         </div>
     </section>
 
@@ -240,8 +301,16 @@
             <h2 class="font-display text-3xl font-semibold tracking-tight">Questions</h2>
             <div class="mt-8 divide-y divide-gray-300 border-y border-gray-300">
                 <details class="group py-5">
+                    <summary class="cursor-pointer font-semibold">Can Zamu answer our phone calls?</summary>
+                    <p class="mt-3 text-ink-700">Yes. We connect Zamu to your existing business number through your phone provider, so customers call the number they already know. Zamu answers in English or Swahili, books, takes M-Pesa deposits, and transfers the call to your staff when a person is needed. Voice is in early access on the Growth, Business and Enterprise plans.</p>
+                </details>
+                <details class="group py-5">
+                    <summary class="cursor-pointer font-semibold">Are calls recorded?</summary>
+                    <p class="mt-3 text-ink-700">No. Zamu keeps written notes of each call: who called, what they asked and what was done. Callers are told at the start that they're speaking to an automated assistant and that notes are taken.</p>
+                </details>
+                <details class="group py-5">
                     <summary class="cursor-pointer font-semibold">Will my customers know they're talking to an assistant?</summary>
-                    <p class="mt-3 text-ink-700">Yes. The first message says it's an automated assistant and tells them how to reach a person: they can type "person" or "mtu" at any time.</p>
+                    <p class="mt-3 text-ink-700">Yes. On WhatsApp the first message says it's an automated assistant and tells them how to reach a person: they can type "person" or "mtu" at any time. On a call, Zamu says so when it answers, and the caller can ask for a person at any time.</p>
                 </details>
                 <details class="group py-5">
                     <summary class="cursor-pointer font-semibold">Can I keep my current WhatsApp number?</summary>
@@ -272,9 +341,9 @@
         <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="font-display text-3xl font-semibold tracking-tight">Let Zamu take the next shift</h2>
-                <p class="mt-2 max-w-xl text-brand-50">Zamu is Swahili for a turn on duty. Tell us about your business and we'll book your kickoff call.</p>
+                <p class="mt-2 max-w-xl text-brand-50">Zamu is Swahili for a turn on duty. Let it answer your calls and chats, and tell us about your business to book your kickoff call.</p>
             </div>
-            <a th:href="@{/signup}" class="btn-inverse px-6 text-base">Sign up</a>
+            <a th:href="@{/signup}" class="btn-inverse px-6 text-base">Start your free trial</a>
         </div>
     </section>
 </main>

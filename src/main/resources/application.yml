@@ -24,8 +24,29 @@ spring:
     cache: true
   cache:
     type: caffeine
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  web:
+    resources:
+      # Static files get a content hash in their URL (/css/app-<hash>.css via @{...} links), so browsers never keep
+      # a stale stylesheet after a deploy, and can cache each version for a year.
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+      cache:
+        cachecontrol:
+          max-age: 365d
+  datasource:
+    hikari:
+      # Small instances (Render's 512 MB) don't need more; raise with ZAMU_DB_POOL_SIZE on bigger ones.
+      maximum-pool-size: ${ZAMU_DB_POOL_SIZE:5}
 
 server:
+  # Render (and most container hosts) tell the app which port to listen on.
+  port: ${PORT:8080}
+  shutdown: graceful
   servlet:
     session:
       timeout: 12h
@@ -48,9 +69,14 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    # Email outages must not mark the app unhealthy (the host would restart it); login emails are retried by the user.
+    mail:
+      enabled: false
 
 zamu:
-  base-url: ${ZAMU_BASE_URL:http://localhost:8080}
+  # Public address, for links in emails and the WhatsApp webhook URL. Render sets RENDER_EXTERNAL_URL itself.
+  base-url: ${ZAMU_BASE_URL:${RENDER_EXTERNAL_URL:http://localhost:8080}}
   login:
     code-validity: 10m
     max-codes-per-hour: 5
@@ -70,6 +96,12 @@ zamu:
   leads:
     # Where website sign-ups are emailed. Empty means no email (they still appear under Sign-ups in the console).
     notify-email: ""
+  whatsapp:
+    # WhatsApp Cloud API. The Graph version is pinned: confirm it is still supported before go-live and plan upgrades.
+    graph-base-url: https://graph.facebook.com
+    graph-version: v25.0
+    connect-timeout: 5s
+    read-timeout: 15s
 
 logging:
   pattern:
@@ -94,6 +126,11 @@ spring:
     locations: classpath:db/migration-h2
   thymeleaf:
     cache: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 0
 server:
   servlet:
     session:
@@ -111,6 +148,10 @@ zamu:
     enabled: true
   leads:
     notify-email: ${ZAMU_LEADS_NOTIFY_EMAIL:sales@zamu.local}
+  whatsapp:
+    # Local only: nothing is sent to Meta (ConsoleWhatsAppApi). Use the customer simulator at /dev/whatsapp.
+    app-secret: local-dev-app-secret
+    verify-token: local-dev-verify-token
 
 ---
 # mysql: staging and production. Every secret comes from the environment; the app refuses to start without
@@ -153,6 +194,11 @@ zamu:
     admin-email: ${ZAMU_BOOTSTRAP_ADMIN_EMAIL:}
   leads:
     notify-email: ${ZAMU_LEADS_NOTIFY_EMAIL:}
+  whatsapp:
+    # From the Meta app (App settings > Basic > App secret) and the verify token you choose when subscribing the
+    # webhook. Without the app secret every webhook is rejected (MSG-01).
+    app-secret: ${ZAMU_WHATSAPP_APP_SECRET:}
+    verify-token: ${ZAMU_WHATSAPP_VERIFY_TOKEN:}
 
 ---
 # test: added on top of mysql by the integration tests (AbstractMySqlIT). Testcontainers supplies the database.
@@ -172,3 +218,8 @@ zamu:
   jobs:
     # Tests drive the runner by hand so they are deterministic.
     enabled: false
+  whatsapp:
+    app-secret: test-app-secret
+    verify-token: test-verify-token
+    # Nothing listens here; tests replace WhatsAppApi with a mock.
+    graph-base-url: http://localhost:9
