@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Go-live · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-3xl space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+        <section class="card" aria-labelledby="checks-heading">
+            <h2 id="checks-heading" class="text-lg font-semibold">Go-live checklist</h2>
+            <p class="mt-1 text-sm text-ink-600">Checked automatically. Also run the phone test script with the client
+                and keep their written approval of the knowledge base (Operations Manual).</p>
+            <ul class="mt-4 divide-y divide-gray-200">
+                <li th:each="c : ${checks}" class="flex items-start justify-between gap-3 py-3">
+                    <div class="flex gap-3">
+                        <span th:if="${c.passed()}" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white" aria-hidden="true">
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                        </span>
+                        <span th:unless="${c.passed()}" class="mt-0.5 h-5 w-5 shrink-0 rounded-full border-2"
+                              th:classappend="${c.required()} ? 'border-danger-700' : 'border-gray-300'" aria-hidden="true"></span>
+                        <div>
+                            <p class="font-medium">
+                                <span th:text="${c.label()}">WhatsApp connected</span>
+                                <span class="sr-only" th:text="${c.passed()} ? '(done)' : '(not done)'"></span>
+                                <span th:unless="${c.required()}" class="text-sm font-normal text-ink-600">(recommended)</span>
+                            </p>
+                            <p class="text-sm text-ink-600" th:text="${c.detail()}">detail</p>
+                        </div>
+                    </div>
+                    <a th:if="${c.fixPath() != null and !c.passed()}" th:href="@{'/admin/tenants/' + ${tenant.id} + '/' + ${c.fixPath()}}" class="link shrink-0 text-sm">Fix</a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="card flex flex-wrap items-center justify-between gap-4" aria-labelledby="status-heading">
+            <div>
+                <h2 id="status-heading" class="text-lg font-semibold">Status: <span th:text="${tenant.status.label()}">Onboarding</span></h2>
+                <p class="text-sm text-ink-600" th:if="${tenant.status.name() == 'ONBOARDING'}">Zamu already replies while onboarding, so you can test on the real number. Going live marks the pilot start.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <form th:if="${tenant.status.name() != 'LIVE' and tenant.status.name() != 'STAFF_ONLY'}"
+                      th:action="@{/admin/tenants/{id}/setup/go-live(id=${tenant.id})}" method="post">
+                    <button type="submit" class="btn-primary" th:disabled="${!ready}">Go live</button>
+                </form>
+                <form th:if="${tenant.status.name() != 'PAUSED' and tenant.status.name() != 'OFFBOARDED'}"
+                      th:action="@{/admin/tenants/{id}/setup/go-live/pause(id=${tenant.id})}" method="post">
+                    <button type="submit" class="btn-secondary">Pause Zamu</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

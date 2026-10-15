@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Fields of the service form, shared by the add and edit pages. The enclosing form has th:object="${serviceForm}". -->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="fields">
+    <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+            <label for="name" class="field-label">Name</label>
+            <input id="name" th:field="*{name}" class="field-input" placeholder="Dental check-up"
+                   th:attr="aria-invalid=${#fields.hasErrors('name')} ? 'true' : null">
+            <p th:if="${#fields.hasErrors('name')}" class="field-error" th:errors="*{name}"></p>
+        </div>
+        <div>
+            <label for="nameSw" class="field-label">Name in Swahili <span class="font-normal text-ink-600">(optional)</span></label>
+            <input id="nameSw" th:field="*{nameSw}" class="field-input" placeholder="Uchunguzi wa meno">
+        </div>
+    </div>
+    <div>
+        <label for="description" class="field-label">Description <span class="font-normal text-ink-600">(optional)</span></label>
+        <input id="description" th:field="*{description}" class="field-input">
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+            <label for="durationMin" class="field-label">Takes (minutes)</label>
+            <input id="durationMin" th:field="*{durationMin}" inputmode="numeric" class="field-input"
+                   th:attr="aria-invalid=${#fields.hasErrors('durationMin')} ? 'true' : null">
+            <p th:if="${#fields.hasErrors('durationMin')}" class="field-error" th:errors="*{durationMin}"></p>
+        </div>
+        <div>
+            <label for="bufferMin" class="field-label">Gap after (minutes)</label>
+            <input id="bufferMin" th:field="*{bufferMin}" inputmode="numeric" class="field-input">
+            <p class="field-hint">Cleaning or preparation time.</p>
+            <p th:if="${#fields.hasErrors('bufferMin')}" class="field-error" th:errors="*{bufferMin}"></p>
+        </div>
+        <div>
+            <label for="depositAmount" class="field-label">Deposit (KES)</label>
+            <input id="depositAmount" th:field="*{depositAmount}" inputmode="decimal" class="field-input">
+            <p class="field-hint">0 confirms bookings straight away.</p>
+            <p th:if="${#fields.hasErrors('depositAmount')}" class="field-error" th:errors="*{depositAmount}"></p>
+        </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+            <label for="priceMin" class="field-label">Price from (KES, optional)</label>
+            <input id="priceMin" th:field="*{priceMin}" inputmode="decimal" class="field-input">
+            <p th:if="${#fields.hasErrors('priceMin')}" class="field-error" th:errors="*{priceMin}"></p>
+        </div>
+        <div>
+            <label for="priceMax" class="field-label">Price up to (KES, optional)</label>
+            <input id="priceMax" th:field="*{priceMax}" inputmode="decimal" class="field-input">
+            <p th:if="${#fields.hasErrors('priceMax')}" class="field-error" th:errors="*{priceMax}"></p>
+        </div>
+    </div>
+    <fieldset th:if="${!#lists.isEmpty(resources)}">
+        <legend class="field-label">Who can do it</legend>
+        <div class="flex flex-wrap gap-4">
+            <label th:each="r : ${resources}" class="flex items-center gap-2 text-sm">
+                <input type="checkbox" th:field="*{resourceIds}" th:value="${r.id()}" class="h-4 w-4 accent-brand-700">
+                <span th:text="${r.name()}">Dr Otieno</span>
+                <span th:if="${!r.active()}" class="text-ink-600">(inactive)</span>
+            </label>
+        </div>
+        <p class="field-hint">Leave all unticked if anyone can do it and only one booking fits at a time.</p>
+    </fieldset>
+    <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" th:field="*{active}" class="h-4 w-4 accent-brand-700"> Customers can book this
+    </label>
+</th:block>
+</body>
+</html>

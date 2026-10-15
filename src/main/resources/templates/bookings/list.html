@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Bookings · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-5xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <h1 class="text-2xl font-semibold">Bookings</h1>
+        <a th:href="@{/app/bookings/new}" class="btn-primary">New booking</a>
+    </div>
+    <form th:action="@{/app/bookings}" method="get" class="mt-4 flex flex-wrap items-end gap-3">
+        <label class="text-sm"><span class="field-label">From</span><input type="date" name="from" th:value="${from}" class="field-input"></label>
+        <label class="text-sm"><span class="field-label">To</span><input type="date" name="to" th:value="${to}" class="field-input"></label>
+        <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" name="cancelled" value="true" th:checked="${cancelled}" class="h-4 w-4 accent-brand-700"> Show cancelled</label>
+        <button type="submit" class="btn-secondary">Show</button>
+    </form>
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+    <section class="card mt-4" aria-label="Bookings">
+        <p th:if="${#lists.isEmpty(bookings)}" class="text-ink-700">No bookings in these dates.</p>
+        <ul th:if="${!#lists.isEmpty(bookings)}" class="divide-y divide-gray-200" th:with="back='/app/bookings'">
+            <th:block th:each="b : ${bookings}"><li th:replace="~{bookings/row :: row}"></li></th:block>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

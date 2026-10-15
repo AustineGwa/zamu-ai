@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Reports · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-5xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Weekly report</h1>
+            <p class="text-ink-600">
+                <span th:text="${#temporals.format(report.weekStart(), 'EEE d MMM')} + ' to ' + ${#temporals.format(report.weekEnd(), 'EEE d MMM yyyy')}">Mon 5 Oct to Sun 11 Oct 2026</span>
+                <span th:if="${current}"> · this week so far</span>
+            </p>
+        </div>
+        <nav aria-label="Weeks" class="flex flex-wrap gap-2">
+            <a th:href="@{/app/reports(week=${previous})}" class="btn-secondary">Previous week</a>
+            <a th:if="${next != null}" th:href="@{/app/reports(week=${next})}" class="btn-secondary">Next week</a>
+            <a th:href="@{/app/reports/weekly.csv(week=${report.weekStart()})}" class="btn-secondary">Download CSV</a>
+        </nav>
+    </div>
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+
+    <!-- REP-01 key numbers -->
+    <section aria-label="Key numbers" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card">
+            <p class="text-sm text-ink-600">Conversations</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${report.conversations()}">124</p>
+            <p th:if="${report.hoursConfigured()}" class="text-sm text-ink-700" th:text="${report.afterHoursConversations()} + ' after hours'">38 after hours</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-ink-600">Handed to your team</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${report.handoverRatePercent()} + '%'">18%</p>
+            <p class="text-sm text-ink-700" th:text="${report.medianFirstReplyMinutes() == null} ? 'No staff replies yet' : 'First reply in ' + ${report.medianFirstReplyMinutes()} + ' min (median)'">First reply in 6 min</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-ink-600">Bookings</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${report.bookings()}">41</p>
+            <p class="text-sm text-ink-700">
+                <span th:if="${report.hoursConfigured()}" th:text="${report.afterHoursBookings()} + ' made after hours · '">12 made after hours · </span>
+                <span th:text="${report.noShows()} + (${report.noShows() == 1} ? ' no-show' : ' no-shows')">2 no-shows</span>
+            </p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-ink-600">Payments collected</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="'KES ' + ${#numbers.formatDecimal(report.paymentsCollectedKes(), 1, 'COMMA', 0, 'POINT')}">KES 0</p>
+            <p class="text-sm text-ink-700">M-Pesa deposits are coming soon</p>
+        </div>
+    </section>
+    <p th:if="${!report.hoursConfigured()}" class="mt-2 text-sm text-ink-600">Opening hours aren't set, so nothing is counted as after hours.</p>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <section class="card" aria-labelledby="services-heading">
+            <h2 id="services-heading" class="font-semibold">Bookings by service</h2>
+            <p th:if="${#lists.isEmpty(report.bookingsByService())}" class="mt-2 text-sm text-ink-700">No bookings this week.</p>
+            <ul th:if="${!#lists.isEmpty(report.bookingsByService())}" class="mt-3 space-y-3">
+                <li th:each="s : ${report.bookingsByService()}">
+                    <div class="flex justify-between gap-3 text-sm"><span th:text="${s.service()}">Check-up</span><span class="font-semibold" th:text="${s.bookings()}">12</span></div>
+                    <meter class="report-bar mt-1" min="0" th:max="${maxBookings}" th:value="${s.bookings()}" aria-hidden="true"></meter>
+                </li>
+            </ul>
+        </section>
+
+        <!-- REP-02 -->
+        <section class="card" aria-labelledby="top-heading">
+            <h2 id="top-heading" class="font-semibold">Top questions Zamu answered</h2>
+            <p th:if="${#lists.isEmpty(report.topQuestions())}" class="mt-2 text-sm text-ink-700">No answers from the knowledge base this week.</p>
+            <ol th:if="${!#lists.isEmpty(report.topQuestions())}" class="mt-3 space-y-3">
+                <li th:each="q : ${report.topQuestions()}">
+                    <div class="flex justify-between gap-3 text-sm"><span th:text="${q.title()}">Opening hours</span><span class="font-semibold" th:text="${q.answers()}">30</span></div>
+                    <meter class="report-bar mt-1" min="0" th:max="${maxAnswers}" th:value="${q.answers()}" aria-hidden="true"></meter>
+                </li>
+            </ol>
+        </section>
+    </div>
+
+    <section class="card mt-6" aria-labelledby="unanswered-heading">
+        <h2 id="unanswered-heading" class="font-semibold">Questions Zamu couldn't answer</h2>
+        <p class="mt-1 text-sm text-ink-600">These went to your team. Suggest an answer and the Zamu team will add it, so Zamu can reply next time.</p>
+        <p th:if="${#lists.isEmpty(report.unanswered())}" class="mt-3 text-sm text-ink-700">None this week.</p>
+        <ul th:if="${!#lists.isEmpty(report.unanswered())}" class="mt-3 divide-y divide-gray-200">
+            <li th:each="u, iter : ${report.unanswered()}" class="py-3">
+                <p class="text-sm text-ink-600" th:text="${T(ai.zamu.shared.time.ZamuTime).display(u.askedAt())}">Tue 6 Oct, 21:14</p>
+                <p class="mt-1" th:text="${u.question()}">Do you do braces?</p>
+                <form th:action="@{/app/requests}" method="post" class="mt-2 flex flex-wrap gap-2">
+                    <input type="hidden" name="type" value="KB">
+                    <input type="hidden" name="entry" th:value="${u.question()}">
+                    <input type="hidden" name="back" th:value="'/app/reports?week=' + ${report.weekStart()}">
+                    <label class="sr-only" th:for="'answer-' + ${iter.index}">Suggested answer</label>
+                    <input th:id="'answer-' + ${iter.index}" name="details" maxlength="1500" required class="field-input grow text-sm"
+                           placeholder="The answer Zamu should give">
+                    <button type="submit" class="btn-secondary text-sm">Suggest answer</button>
+                </form>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

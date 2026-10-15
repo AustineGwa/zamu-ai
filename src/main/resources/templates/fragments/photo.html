@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!--
+  Photographs for the public website, served by Unsplash's image CDN (resized and converted to WebP/AVIF on the fly).
+  Free to use under the Unsplash License (https://unsplash.com/license); credits are in the comments where each is used.
+  Usage: <img th:replace="~{fragments/photo :: img('1768244016569-1b4553623961', 'Alt text', 560, 680, 'classes', 'lazy')}">
+  The CSP allows https://images.unsplash.com for img-src (SecurityConfig).
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<img th:fragment="img(id, alt, w, h, cls, loading)"
+     th:src="|https://images.unsplash.com/photo-${id}?auto=format&fit=crop&crop=faces,entropy&w=${w}&h=${h}&q=70|"
+     th:attr="srcset=|https://images.unsplash.com/photo-${id}?auto=format&fit=crop&crop=faces,entropy&w=${w}&h=${h}&q=70 1x, https://images.unsplash.com/photo-${id}?auto=format&fit=crop&crop=faces,entropy&w=${w * 2}&h=${h * 2}&q=55 2x|,loading=${loading},width=${w},height=${h}"
+     th:alt="${alt}" th:class="${cls}" decoding="async">
+</body>
+</html>

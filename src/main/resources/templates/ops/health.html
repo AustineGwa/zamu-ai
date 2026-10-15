@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Health · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <h1 class="text-2xl font-semibold">Health</h1>
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+    <section aria-label="Queue and delivery" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card" th:classappend="${health.backlogAlert()} ? 'border-red-300 bg-red-50'">
+            <p class="text-sm text-ink-600">Jobs due now</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${health.jobs().due()}">0</p>
+            <p class="text-sm text-ink-700" th:text="'Oldest waiting ' + ${health.oldestDueAge().toSeconds()} + ' s · ' + ${health.jobs().running()} + ' running'">Oldest waiting 0 s</p>
+        </div>
+        <div class="card" th:classappend="${health.jobs().dead() > 0} ? 'border-amber-300 bg-amber-50'">
+            <p class="text-sm text-ink-600">Dead jobs</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${health.jobs().dead()}">0</p>
+            <p class="text-sm text-ink-700" th:text="${health.jobs().failedWaiting()} + ' waiting to retry'">0 waiting to retry</p>
+        </div>
+        <div class="card" th:classappend="${health.unprocessedWebhooks() > 5} ? 'border-red-300 bg-red-50'">
+            <p class="text-sm text-ink-600">Webhooks not processed (5 min+)</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${health.unprocessedWebhooks()}">0</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-ink-600">Messages failed (24 h)</p>
+            <p class="mt-1 text-3xl font-semibold" th:text="${health.failedMessages24h()}">0</p>
+            <a th:href="@{/admin/review}" class="link text-sm">Review queue</a>
+        </div>
+    </section>
+
+    <section class="card mt-6" aria-labelledby="dead-heading">
+        <h2 id="dead-heading" class="font-semibold">Dead jobs</h2>
+        <p class="mt-1 text-sm text-ink-600">Jobs that failed 5 times (NFR-04). Fix the cause, then retry.</p>
+        <p th:if="${#lists.isEmpty(health.deadJobs())}" class="mt-3 text-sm text-ink-700">None.</p>
+        <div th:if="${!#lists.isEmpty(health.deadJobs())}" class="mt-3 overflow-x-auto">
+            <table class="table-basic min-w-[44rem]">
+                <thead><tr><th scope="col">Job</th><th scope="col">Client</th><th scope="col">Last error</th><th scope="col">When</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                <tr th:each="j : ${health.deadJobs()}">
+                    <td class="font-mono text-sm" th:text="${j.type()}">send_message</td>
+                    <td th:text="${j.tenant() != null ? j.tenant() : '—'}">Afya Clinic</td>
+                    <td class="max-w-md break-words text-sm text-ink-700" th:text="${j.lastError()}">http_500</td>
+                    <td class="text-sm" th:text="${T(ai.zamu.shared.time.ZamuTime).display(j.updatedAt())}">14 Oct</td>
+                    <td class="text-right">
+                        <form th:action="@{'/admin/jobs/' + ${j.id()} + '/retry'}" method="post"><button type="submit" class="btn-secondary text-sm">Retry</button></form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <section class="card" aria-labelledby="quality-heading">
+            <h2 id="quality-heading" class="font-semibold">WhatsApp number quality</h2>
+            <p th:if="${#lists.isEmpty(health.numbers())}" class="mt-2 text-sm text-ink-700">No numbers connected.</p>
+            <ul th:if="${!#lists.isEmpty(health.numbers())}" class="mt-3 divide-y divide-gray-200 text-sm">
+                <li th:each="n : ${health.numbers()}" class="flex justify-between gap-3 py-2">
+                    <span><span class="font-semibold" th:text="${n.tenant()}">Afya</span> <span class="text-ink-600" th:text="${n.displayPhone()}">+254…</span></span>
+                    <span class="badge" th:classappend="${n.rating() == 'RED'} ? 'bg-red-50 text-red-800' : (${n.rating() == 'YELLOW'} ? 'bg-amber-50 text-amber-900' : 'bg-brand-50 text-brand-800')"
+                          th:text="${n.rating() != null ? n.rating() : 'Unknown'}">GREEN</span>
+                </li>
+            </ul>
+        </section>
+        <section class="card" aria-labelledby="calendar-heading">
+            <h2 id="calendar-heading" class="font-semibold">Calendars needing reconnection</h2>
+            <p th:if="${#lists.isEmpty(health.revokedCalendars())}" class="mt-2 text-sm text-ink-700">None.</p>
+            <ul th:if="${!#lists.isEmpty(health.revokedCalendars())}" class="mt-2 list-disc pl-5 text-sm">
+                <li th:each="t : ${health.revokedCalendars()}" th:text="${t}">Afya Clinic</li>
+            </ul>
+        </section>
+    </div>
+</main>
+</body>
+</html>

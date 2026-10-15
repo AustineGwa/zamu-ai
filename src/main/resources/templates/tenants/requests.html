@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Change requests · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-3xl px-4 py-6">
+    <h1 class="text-2xl font-semibold">Change requests</h1>
+    <p class="mt-1 text-ink-700">Ask the Zamu team to change answers, hours, services or anything else. We'll make the change and mark it done here.</p>
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+    <form th:action="@{/app/requests}" method="post" class="card mt-4 space-y-4">
+        <div>
+            <label for="type" class="field-label">What should change?</label>
+            <select id="type" name="type" class="field-input max-w-xs">
+                <option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.label()}">Knowledge base answer</option>
+            </select>
+        </div>
+        <div>
+            <label for="details" class="field-label">Details</label>
+            <textarea id="details" name="details" rows="4" class="field-input" maxlength="2000" required
+                      placeholder="For example: the price of a filling is now KES 5,000 to 9,000."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Send request</button>
+    </form>
+    <section class="card mt-6" aria-labelledby="sent-heading">
+        <h2 id="sent-heading" class="font-semibold">Your requests</h2>
+        <p th:if="${#lists.isEmpty(requests)}" class="mt-2 text-sm text-ink-700">None yet.</p>
+        <ul th:if="${!#lists.isEmpty(requests)}" class="mt-3 divide-y divide-gray-200">
+            <li th:each="r : ${requests}" class="py-3">
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <span class="font-semibold" th:text="${r.type().label()}">Knowledge base answer</span>
+                    <span class="text-ink-600" th:text="${T(ai.zamu.shared.time.ZamuTime).display(r.createdAt())}">14 Oct</span>
+                    <span class="badge" th:classappend="${r.open()} ? 'bg-amber-50 text-amber-900' : (${r.status() == 'done'} ? 'bg-brand-50 text-brand-800' : 'bg-gray-100 text-ink-700')"
+                          th:text="${r.open()} ? 'Open' : (${r.status() == 'done'} ? 'Done' : 'Declined')">Open</span>
+                </div>
+                <p class="mt-1 whitespace-pre-line text-ink-900" th:text="${r.details()}">Details</p>
+                <p th:if="${r.note() != null}" class="mt-1 text-sm text-ink-700" th:text="'Zamu team: ' + ${r.note()}">Note</p>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

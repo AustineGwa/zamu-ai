@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Knowledge base · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-3xl space-y-6 px-4 py-6">
+    <div>
+        <h1 class="text-2xl font-semibold">What Zamu knows</h1>
+        <p class="text-sm text-ink-600">Zamu answers customers only from these approved entries.
+            <th:block th:if="${currentUser.owner}">To change one or add a new one, suggest it below.</th:block></p>
+    </div>
+    <div th:insert="~{fragments/forms :: flash}"></div>
+    <!-- Spec: Knowledge base screen, "suggest a change" (owners). -->
+    <details th:if="${currentUser.owner}" class="card">
+        <summary class="cursor-pointer font-semibold text-brand-700">Suggest a change or a new answer</summary>
+        <form th:action="@{/app/requests}" method="post" class="mt-3 space-y-3">
+            <input type="hidden" name="type" value="KB">
+            <input type="hidden" name="back" value="/app/knowledge">
+            <label for="kb-details" class="sr-only">What should change</label>
+            <textarea id="kb-details" name="details" rows="3" maxlength="2000" class="field-input" required
+                      placeholder="For example: we now open at 7:30am on weekdays."></textarea>
+            <button type="submit" class="btn-primary">Send to the Zamu team</button>
+        </form>
+    </details>
+    <p th:if="${#lists.isEmpty(entries)}" class="card text-sm text-ink-600">No approved entries yet.</p>
+    <article th:each="e : ${entries}" class="card space-y-2">
+        <h2 class="font-semibold" th:text="${e.title}">Opening hours</h2>
+        <p class="text-sm text-ink-600" th:text="${e.question}">What time do you open?</p>
+        <p class="whitespace-pre-line text-sm" th:text="${e.answerEn}">Answer</p>
+        <p th:if="${e.hasSwahili()}" class="whitespace-pre-line border-l-2 border-gray-200 pl-3 text-sm text-ink-700" th:text="${e.answerSw}">Jibu</p>
+        <form th:if="${currentUser.owner}" th:action="@{/app/requests}" method="post" class="flex flex-wrap items-center gap-2 pt-1">
+            <input type="hidden" name="type" value="KB">
+            <input type="hidden" name="back" value="/app/knowledge">
+            <label class="sr-only" th:for="'kb-change-' + ${e.id}" th:text="'Suggest a change to ' + ${e.title}">Suggest a change</label>
+            <input th:id="'kb-change-' + ${e.id}" name="details" maxlength="2000" class="field-input grow text-sm"
+                   placeholder="Suggest a change to this answer" required>
+            <input type="hidden" name="entry" th:value="${e.title}">
+            <button type="submit" class="btn-secondary text-sm">Suggest</button>
+        </form>
+    </article>
+</main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Review queue · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-5xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Review queue</h1>
+            <p class="text-ink-600">Answers Zamu wasn't sure about, sensitive chats, errors and failed sends, across all clients.</p>
+        </div>
+        <nav aria-label="Period" class="flex gap-2 text-sm">
+            <a th:href="@{/admin/review(days=1)}" class="btn-secondary" th:classappend="${days == 1} ? 'ring-2 ring-brand-600'">1 day</a>
+            <a th:href="@{/admin/review(days=2)}" class="btn-secondary" th:classappend="${days == 2} ? 'ring-2 ring-brand-600'">2 days</a>
+            <a th:href="@{/admin/review(days=7)}" class="btn-secondary" th:classappend="${days == 7} ? 'ring-2 ring-brand-600'">7 days</a>
+        </nav>
+    </div>
+    <p th:if="${#lists.isEmpty(items)}" class="card mt-4 text-ink-700">Nothing to review.</p>
+    <ul th:if="${!#lists.isEmpty(items)}" class="card mt-4 divide-y divide-gray-200 p-0 sm:p-0">
+        <li th:each="i : ${items}" class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-start sm:gap-4">
+            <div class="w-40 shrink-0 text-sm">
+                <a class="link font-semibold" th:href="@{'/admin/tenants/' + ${i.tenantId()} + '/kb'}" th:text="${i.tenant()}">Afya Clinic</a>
+                <p class="text-ink-600" th:text="${T(ai.zamu.shared.time.ZamuTime).display(i.at())}">14 Oct</p>
+            </div>
+            <div class="grow">
+                <span class="badge"
+                      th:classappend="${i.kind() == 'low_confidence'} ? 'bg-amber-50 text-amber-900' : 'bg-red-50 text-red-800'"
+                      th:text="${i.kind() == 'low_confidence'} ? 'Not sure' : (${i.kind() == 'send_failed'} ? 'Send failed' : (${i.kind() == 'sensitive'} ? 'Sensitive' : (${i.kind() == 'payment_issue'} ? 'Payment' : 'Error')))">Not sure</span>
+                <!-- NFR-11: no health details here; sensitive chats are read in the client's own inbox. -->
+                <p class="mt-1 text-sm" th:text="${i.kind() == 'sensitive'} ? 'Emergency or sensitive topic: handled by the client\'s staff.' : (${i.detail() != null} ? ${i.detail()} : '')">Do you do braces?</p>
+            </div>
+        </li>
+    </ul>
+</main>
+</body>
+</html>

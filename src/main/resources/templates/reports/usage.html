@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Usage and billing · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-7xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Usage and billing</h1>
+            <p class="text-ink-600" th:text="${#temporals.format(month.atDay(1), 'MMMM yyyy')}">October 2026</p>
+        </div>
+        <nav aria-label="Months" class="flex flex-wrap gap-2">
+            <a th:href="@{/admin/usage(month=${previous})}" class="btn-secondary">Previous month</a>
+            <a th:if="${next != null}" th:href="@{/admin/usage(month=${next})}" class="btn-secondary">Next month</a>
+            <a th:href="@{/admin/usage/export.csv(month=${month})}" class="btn-secondary">Download CSV</a>
+        </nav>
+    </div>
+    <p class="mt-3 text-sm text-ink-700">
+        Running cost is AI usage plus WhatsApp template messages, in KES. A client is flagged when it passes 40% of
+        their plan fee (REP-04). <strong th:text="${flagged} + ' flagged'">0 flagged</strong>.
+    </p>
+    <div class="card mt-4 overflow-x-auto p-0 sm:p-0">
+        <table class="table-basic min-w-[60rem]">
+            <thead>
+            <tr>
+                <th scope="col">Client</th><th scope="col">Plan</th>
+                <th scope="col" class="text-right">Conversations</th><th scope="col" class="text-right">Overage</th>
+                <th scope="col" class="text-right">Messages in / out</th><th scope="col" class="text-right">AI (USD)</th>
+                <th scope="col" class="text-right">WhatsApp billable</th><th scope="col" class="text-right">Running cost</th>
+                <th scope="col" class="text-right">Plan fee</th><th scope="col" class="text-right">Share</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(rows)}"><td colspan="10" class="text-ink-700">No clients yet.</td></tr>
+            <tr th:each="r : ${rows}" th:classappend="${r.flagged()} ? 'bg-red-50'">
+                <td><a class="link font-semibold" th:href="@{'/admin/tenants/' + ${r.tenantId()} + '/setup/go-live'}" th:text="${r.tenant()}">Afya Clinic</a>
+                    <span class="block text-xs text-ink-600" th:text="${r.status().label()}">Live</span></td>
+                <td th:text="${r.plan()}">Growth</td>
+                <td class="text-right" th:text="${r.conversations()} + ' / ' + ${r.conversationLimit()}">820 / 1500</td>
+                <td class="text-right" th:text="${r.overage()}">0</td>
+                <td class="text-right" th:text="${r.messagesIn()} + ' / ' + ${r.messagesOut()}">2100 / 2400</td>
+                <td class="text-right" th:text="${r.aiCostUsd()}">4.2</td>
+                <td class="text-right" th:text="${r.waBillableMessages()}">120</td>
+                <td class="text-right" th:text="'KES ' + ${#numbers.formatDecimal(r.runningCostKes(), 1, 'COMMA', 0, 'POINT')}">KES 700</td>
+                <td class="text-right" th:text="${r.planFeeKes() == null} ? '—' : 'KES ' + ${#numbers.formatDecimal(r.planFeeKes(), 1, 'COMMA', 0, 'POINT')}">KES 20,000</td>
+                <td class="text-right font-semibold" th:classappend="${r.flagged()} ? 'text-red-800'"
+                    th:text="${r.costSharePercent() == null} ? '—' : ${r.costSharePercent()} + '%'">4%</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

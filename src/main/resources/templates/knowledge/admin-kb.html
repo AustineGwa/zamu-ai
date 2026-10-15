@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Knowledge base · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="grid gap-6 lg:grid-cols-[3fr_2fr]">
+        <section class="space-y-3" aria-labelledby="kb-heading">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 id="kb-heading" class="text-lg font-semibold">Knowledge base</h2>
+                    <p class="text-sm text-ink-600">
+                        Zamu answers only from approved entries. <strong class="text-ink-900" th:text="${approvedCount}">0</strong> approved.
+                    </p>
+                </div>
+                <form th:action="@{/admin/tenants/{id}/kb/reembed(id=${tenant.id})}" method="post">
+                    <button type="submit" class="btn-secondary">Re-index all approved</button>
+                </form>
+            </div>
+            <div th:replace="~{fragments/forms :: flash}"></div>
+            <p th:if="${#lists.isEmpty(entries)}" class="card text-sm text-ink-600">
+                No entries yet. Add one per question, under 80 words, from the client's questionnaire and price list.
+            </p>
+            <article th:each="e : ${entries}" class="card space-y-2">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <h3 class="font-semibold"><a th:href="@{/admin/tenants/{id}/kb/{eid}(id=${tenant.id}, eid=${e.id})}" class="link" th:text="${e.title}">Opening hours</a></h3>
+                        <p class="text-sm text-ink-600" th:text="${e.question}">What time do you open?</p>
+                    </div>
+                    <span class="badge"
+                          th:classappend="${e.status.name() == 'APPROVED'} ? 'bg-brand-50 text-brand-800' : (${e.status.name() == 'ARCHIVED'} ? 'bg-gray-100 text-ink-600' : 'bg-danger-50 text-danger-700')"
+                          th:text="${e.status.label()}">Draft</span>
+                </div>
+                <p class="whitespace-pre-line text-sm" th:text="${e.answerEn}">Answer</p>
+                <p th:if="${e.hasSwahili()}" class="whitespace-pre-line border-l-2 border-gray-200 pl-3 text-sm text-ink-700" th:text="${e.answerSw}">Jibu</p>
+                <p class="text-xs text-ink-600">
+                    <span th:text="${e.answerWords()} + ' words'">40 words</span>
+                    <span th:if="${e.answerWords() > 80}" class="font-semibold text-danger-700">· over 80 words</span>
+                    <span th:unless="${e.hasSwahili()}">· no Swahili yet</span>
+                    <span th:if="${e.sourceRef != null}" th:text="'· source: ' + ${e.sourceRef}">· source</span>
+                </p>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <form th:if="${e.status.name() != 'APPROVED'}" th:action="@{/admin/tenants/{id}/kb/{eid}/approve(id=${tenant.id}, eid=${e.id})}" method="post">
+                        <button type="submit" class="btn-primary">Approve</button>
+                    </form>
+                    <form th:if="${e.status.name() == 'APPROVED'}" th:action="@{/admin/tenants/{id}/kb/{eid}/unapprove(id=${tenant.id}, eid=${e.id})}" method="post">
+                        <button type="submit" class="btn-secondary">Back to draft</button>
+                    </form>
+                    <form th:if="${e.status.name() != 'ARCHIVED'}" th:action="@{/admin/tenants/{id}/kb/{eid}/archive(id=${tenant.id}, eid=${e.id})}" method="post">
+                        <button type="submit" class="btn-secondary">Archive</button>
+                    </form>
+                </div>
+            </article>
+        </section>
+
+        <section class="card h-fit" aria-labelledby="new-heading">
+            <h2 id="new-heading" class="text-lg font-semibold">New entry</h2>
+            <div th:replace="~{knowledge/admin-kb-edit :: fields(${form}, @{/admin/tenants/{id}/kb(id=${tenant.id})}, 'Save draft')}"></div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

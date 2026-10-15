@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Services · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+
+        <section class="card" aria-labelledby="services-heading">
+            <h2 id="services-heading" class="text-lg font-semibold">Services customers can book</h2>
+            <p class="mt-1 text-sm text-ink-600">Zamu offers free times for these, nearest first, within opening hours.</p>
+            <p th:if="${#lists.isEmpty(services)}" class="mt-4 text-sm text-ink-700">No services yet. Add the first one below.</p>
+            <div th:if="${!#lists.isEmpty(services)}" class="mt-4 overflow-x-auto">
+                <table class="table-basic min-w-[36rem]">
+                    <thead>
+                    <tr><th scope="col">Service</th><th scope="col">Takes</th><th scope="col">Deposit</th><th scope="col">Who</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${services}">
+                        <td>
+                            <span class="font-semibold" th:text="${s.name()}">Dental check-up</span>
+                            <span th:if="${!s.active()}" class="badge ml-1 bg-gray-100 text-ink-700">Hidden</span>
+                            <span th:if="${s.nameSw() != null}" class="block text-xs text-ink-600" th:text="${s.nameSw()}">Uchunguzi</span>
+                        </td>
+                        <td th:text="${s.durationMin()} + ' min' + (${s.bufferMin() > 0} ? ' + ' + ${s.bufferMin()} : '')">30 min</td>
+                        <td th:text="${s.needsDeposit()} ? 'KES ' + ${#numbers.formatDecimal(s.depositAmount(), 1, 'COMMA', 0, 'POINT')} : 'None'">KES 500</td>
+                        <td th:text="${#lists.isEmpty(s.resourceIds())} ? 'Anyone' : ${s.resourceIds().size()} + ' people or rooms'">Anyone</td>
+                        <td class="text-right"><a th:href="@{'/admin/tenants/' + ${tenant.id} + '/setup/services/' + ${s.id()}}" class="link">Edit</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <details class="mt-5" th:open="${openServiceForm == true}">
+                <summary class="cursor-pointer font-semibold text-brand-700">Add a service</summary>
+                <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/services'}" th:object="${serviceForm}" method="post"
+                      class="mt-4 space-y-4" novalidate>
+                    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                    <th:block th:replace="~{bookings/service-fields :: fields}"></th:block>
+                    <button type="submit" class="btn-primary">Add service</button>
+                </form>
+            </details>
+        </section>
+
+        <section class="card" aria-labelledby="resources-heading">
+            <h2 id="resources-heading" class="text-lg font-semibold">Staff and rooms</h2>
+            <p class="mt-1 text-sm text-ink-600">
+                Optional. Add the people or rooms that deliver services so two customers can be booked at the same time
+                with different staff. A Google Calendar ID makes Zamu respect that person's own calendar too.
+            </p>
+            <ul th:if="${!#lists.isEmpty(resources)}" class="mt-4 divide-y divide-gray-200 border-y border-gray-200">
+                <li th:each="r : ${resources}" class="py-3">
+                    <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/services/resources/' + ${r.id()}}" method="post"
+                          class="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto_auto]">
+                        <label class="text-sm"><span class="field-label">Name</span>
+                            <input name="name" th:value="${r.name()}" class="field-input" required></label>
+                        <label class="text-sm"><span class="field-label">Role</span>
+                            <input name="role" th:value="${r.role()}" class="field-input"></label>
+                        <label class="text-sm"><span class="field-label">Google Calendar ID (optional)</span>
+                            <input name="calendarId" th:value="${r.calendarId()}" class="field-input"></label>
+                        <label class="flex items-center gap-2 pb-2 text-sm">
+                            <input type="checkbox" name="active" value="true" th:checked="${r.active()}" class="h-4 w-4 accent-brand-700"> Active</label>
+                        <button type="submit" class="btn-secondary">Save</button>
+                    </form>
+                </li>
+            </ul>
+            <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/services/resources'}" th:object="${resourceForm}" method="post"
+                  class="mt-4 grid items-end gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto]" novalidate>
+                <div>
+                    <label for="resource-name" class="field-label">Name</label>
+                    <input id="resource-name" th:field="*{name}" class="field-input" placeholder="Dr Otieno">
+                    <p th:if="${#fields.hasErrors('name')}" class="field-error" th:errors="*{name}"></p>
+                </div>
+                <div>
+                    <label for="resource-role" class="field-label">Role</label>
+                    <input id="resource-role" th:field="*{role}" class="field-input" placeholder="Dentist">
+                </div>
+                <div>
+                    <label for="resource-calendar" class="field-label">Google Calendar ID (optional)</label>
+                    <input id="resource-calendar" th:field="*{calendarId}" class="field-input">
+                </div>
+                <input type="hidden" name="active" value="true">
+                <button type="submit" class="btn-primary">Add</button>
+            </form>
+        </section>
+
+        <section class="card max-w-2xl" aria-labelledby="rules-heading">
+            <h2 id="rules-heading" class="text-lg font-semibold">Booking rules</h2>
+            <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/services/settings'}" th:object="${settingsForm}" method="post"
+                  class="mt-4 space-y-4" novalidate>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="minNoticeHours" class="field-label">Book at least (hours ahead)</label>
+                        <input id="minNoticeHours" th:field="*{minNoticeHours}" inputmode="numeric" class="field-input">
+                        <p th:if="${#fields.hasErrors('minNoticeHours')}" class="field-error" th:errors="*{minNoticeHours}"></p>
+                    </div>
+                    <div>
+                        <label for="maxAdvanceDays" class="field-label">Book up to (days ahead)</label>
+                        <input id="maxAdvanceDays" th:field="*{maxAdvanceDays}" inputmode="numeric" class="field-input">
+                        <p th:if="${#fields.hasErrors('maxAdvanceDays')}" class="field-error" th:errors="*{maxAdvanceDays}"></p>
+                    </div>
+                    <div>
+                        <label for="changeCutoffHours" class="field-label">Customers can change until (hours before)</label>
+                        <input id="changeCutoffHours" th:field="*{changeCutoffHours}" inputmode="numeric" class="field-input">
+                        <p class="field-hint">After this, Zamu passes changes to your team.</p>
+                        <p th:if="${#fields.hasErrors('changeCutoffHours')}" class="field-error" th:errors="*{changeCutoffHours}"></p>
+                    </div>
+                    <div>
+                        <label for="slotStepMin" class="field-label">Slots start every (minutes)</label>
+                        <input id="slotStepMin" th:field="*{slotStepMin}" inputmode="numeric" class="field-input">
+                        <p th:if="${#fields.hasErrors('slotStepMin')}" class="field-error" th:errors="*{slotStepMin}"></p>
+                    </div>
+                </div>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" th:field="*{reminder2h}" class="h-4 w-4 accent-brand-700">
+                    Also remind customers 2 hours before (the 24-hour reminder is always sent)
+                </label>
+                <button type="submit" class="btn-primary">Save rules</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

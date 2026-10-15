@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Edit entry · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-2xl space-y-4">
+        <a th:href="@{/admin/tenants/{id}/kb(id=${tenant.id})}" class="link text-sm">All entries</a>
+        <section class="card" aria-labelledby="edit-heading">
+            <h2 id="edit-heading" class="text-lg font-semibold">
+                Edit entry <span class="badge ml-1" th:text="${entry.status.label()}">Draft</span>
+            </h2>
+            <p th:if="${entry.status.name() == 'APPROVED'}" class="mt-1 text-sm text-ink-600">
+                It stays approved; Zamu uses the new text within a minute.
+            </p>
+            <div th:replace="~{knowledge/admin-kb-edit :: fields(${form}, @{/admin/tenants/{id}/kb/{eid}(id=${tenant.id}, eid=${entry.id})}, 'Save')}"></div>
+        </section>
+    </div>
+</main>
+
+<!-- The entry fields, shared by the new-entry and edit forms. -->
+<form th:fragment="fields(f, action, label)" th:action="${action}" th:object="${form}" method="post" class="mt-4 space-y-4" novalidate>
+    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+    <div>
+        <label for="title" class="field-label">Title</label>
+        <input id="title" th:field="*{title}" class="field-input" placeholder="Filling prices"
+               th:attr="aria-invalid=${#fields.hasErrors('title')} ? 'true' : null">
+        <p th:if="${#fields.hasErrors('title')}" class="field-error" th:errors="*{title}"></p>
+    </div>
+    <div>
+        <label for="question" class="field-label">Question, as customers ask it</label>
+        <input id="question" th:field="*{question}" class="field-input" placeholder="How much is a filling?"
+               th:attr="aria-invalid=${#fields.hasErrors('question')} ? 'true' : null">
+        <p th:if="${#fields.hasErrors('question')}" class="field-error" th:errors="*{question}"></p>
+    </div>
+    <div>
+        <label for="answerEn" class="field-label">Answer in English</label>
+        <textarea id="answerEn" th:field="*{answerEn}" rows="5" class="field-input"
+                  placeholder="A filling costs KES 4,500 to 8,000 depending on size. The dentist confirms the price at your visit."
+                  th:attr="aria-invalid=${#fields.hasErrors('answerEn')} ? 'true' : null"></textarea>
+        <p class="field-hint">Facts only, under 80 words. Every price, time and phone number Zamu says must be written here.</p>
+        <p th:if="${#fields.hasErrors('answerEn')}" class="field-error" th:errors="*{answerEn}"></p>
+    </div>
+    <div>
+        <label for="answerSw" class="field-label">Answer in Swahili <span class="font-normal text-ink-600">(recommended for the top 20 questions)</span></label>
+        <textarea id="answerSw" th:field="*{answerSw}" rows="4" class="field-input"></textarea>
+        <p th:if="${#fields.hasErrors('answerSw')}" class="field-error" th:errors="*{answerSw}"></p>
+    </div>
+    <div>
+        <label for="sourceRef" class="field-label">Source <span class="font-normal text-ink-600">(optional)</span></label>
+        <input id="sourceRef" th:field="*{sourceRef}" class="field-input" placeholder="Price list, September 2026">
+    </div>
+    <button type="submit" class="btn-primary" th:text="${label}">Save</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Edit service · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <section class="card max-w-3xl" aria-labelledby="edit-heading">
+        <a th:href="@{'/admin/tenants/' + ${tenant.id} + '/setup/services'}" class="link text-sm">All services</a>
+        <h2 id="edit-heading" class="mt-2 text-lg font-semibold">Edit service</h2>
+        <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/services/' + ${serviceId}}" th:object="${serviceForm}"
+              method="post" class="mt-4 space-y-4" novalidate>
+            <div th:replace="~{fragments/forms :: globalErrors}"></div>
+            <th:block th:replace="~{bookings/service-fields :: fields}"></th:block>
+            <button type="submit" class="btn-primary">Save service</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

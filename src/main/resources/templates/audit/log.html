@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Audit log · Admin · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Audit log</h1>
+            <p class="text-ink-600">Who changed what, across all clients. Newest first, up to 500 rows.</p>
+        </div>
+        <a class="btn-secondary text-sm"
+           th:href="@{/admin/audit/export.csv(tenant=${tenant},action=${action},from=${from},to=${to})}">Download CSV</a>
+    </div>
+
+    <form th:action="@{/admin/audit}" method="get" class="card mt-4 grid gap-3 sm:grid-cols-5 sm:items-end">
+        <div>
+            <label for="f-tenant" class="field-label">Client</label>
+            <select id="f-tenant" name="tenant" class="field-input">
+                <option value="">All clients</option>
+                <option th:each="t : ${tenants}" th:value="${t.id()}" th:text="${t.displayName()}"
+                        th:selected="${tenant != null and tenant == t.id().toString()}">Afya Clinic</option>
+            </select>
+        </div>
+        <div>
+            <label for="f-action" class="field-label">Action contains</label>
+            <input id="f-action" name="action" th:value="${action}" maxlength="80" class="field-input" placeholder="e.g. kb. or booking">
+        </div>
+        <div>
+            <label for="f-from" class="field-label">From</label>
+            <input id="f-from" name="from" type="date" th:value="${from}" class="field-input">
+        </div>
+        <div>
+            <label for="f-to" class="field-label">To</label>
+            <input id="f-to" name="to" type="date" th:value="${to}" class="field-input">
+        </div>
+        <button type="submit" class="btn-primary">Search</button>
+    </form>
+
+    <p th:if="${#lists.isEmpty(rows)}" class="card mt-4 text-ink-700">No entries for this search.</p>
+    <div th:if="${!#lists.isEmpty(rows)}" class="card mt-4 overflow-x-auto p-0 sm:p-0">
+        <table class="w-full text-left text-sm">
+            <caption class="sr-only">Audit entries</caption>
+            <thead class="border-b border-gray-200 text-ink-600">
+            <tr>
+                <th scope="col" class="px-4 py-2 font-medium">Time</th>
+                <th scope="col" class="px-4 py-2 font-medium">Client</th>
+                <th scope="col" class="px-4 py-2 font-medium">Who</th>
+                <th scope="col" class="px-4 py-2 font-medium">Action</th>
+                <th scope="col" class="px-4 py-2 font-medium">Record</th>
+                <th scope="col" class="px-4 py-2 font-medium">IP</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+            <tr th:each="r : ${rows}" class="align-top">
+                <td class="whitespace-nowrap px-4 py-2" th:text="${T(ai.zamu.shared.time.ZamuTime).display(r.createdAt())}">14 Oct, 09:12</td>
+                <td class="px-4 py-2" th:text="${r.tenant() != null} ? ${r.tenant()} : 'Platform'">Afya Clinic</td>
+                <td class="px-4 py-2" th:text="${r.actor() != null} ? ${r.actor()} : 'System'">Wanjiku</td>
+                <td class="px-4 py-2"><code class="text-xs" th:text="${r.action()}">kb.approved</code></td>
+                <td class="px-4 py-2 text-ink-600" th:text="${r.entity() != null} ? ${r.entity()} : ''">kb_entry</td>
+                <td class="px-4 py-2 text-ink-600" th:text="${r.ip() != null} ? ${r.ip()} : ''">102.0.0.1</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

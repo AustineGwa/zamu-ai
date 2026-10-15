@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Today · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-5xl px-4 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold">Today</h1>
+            <p class="text-ink-600" th:text="${#temporals.format(day, 'EEEE d MMMM')}">Saturday 18 October</p>
+        </div>
+        <a th:href="@{/app/bookings/new}" class="btn-primary">New booking</a>
+    </div>
+    <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
+    <section class="card mt-4" aria-label="Today's bookings">
+        <p th:if="${#lists.isEmpty(bookings)}" class="text-ink-700">No bookings today.</p>
+        <ul th:if="${!#lists.isEmpty(bookings)}" class="divide-y divide-gray-200" th:with="back='/app/today'">
+            <th:block th:each="b : ${bookings}"><li th:replace="~{bookings/row :: row}"></li></th:block>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

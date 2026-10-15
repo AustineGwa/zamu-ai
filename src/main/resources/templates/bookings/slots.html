@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Slot picker fragment (htmx): radio buttons named "slot" with values "{resourceId|0}:{epochSeconds}". -->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="slots" id="slots">
+    <p th:if="${slots == null}" class="text-sm text-ink-600">Choose a service and a day to see free times.</p>
+    <p th:if="${calendarError == true}" class="flash-error" role="alert">The calendar can't be checked right now. Try again in a minute.</p>
+    <p th:if="${slots != null and #lists.isEmpty(slots) and calendarError != true}" class="text-sm text-ink-700">No free times that day.</p>
+    <fieldset th:if="${slots != null and !#lists.isEmpty(slots)}">
+        <legend class="field-label">Free times</legend>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label th:each="s, iter : ${slots}" class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                <input type="radio" name="slot" th:value="(${s.resourceId()} == null ? '0' : ${s.resourceId()}) + ':' + ${s.startsAt().getEpochSecond()}"
+                       th:checked="${iter.first}" class="h-4 w-4 accent-brand-700">
+                <span>
+                    <span class="font-semibold" th:text="${#temporals.format(s.startsAt().atZone(zone), 'HH:mm')}">09:30</span>
+                    <span th:if="${s.resourceName() != null}" class="block text-xs text-ink-600" th:text="${s.resourceName()}">Dr Otieno</span>
+                </span>
+            </label>
+        </div>
+    </fieldset>
+</div>
+</body>
+</html>

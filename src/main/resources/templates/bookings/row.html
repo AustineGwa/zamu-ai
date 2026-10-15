@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- One booking row for the Today and Bookings pages. Needs ${b}, ${zone}, ${now} and ${back}. -->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<li th:fragment="row" class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+    th:with="start=${b.startsAt().atZone(zone)}">
+    <div class="flex gap-4">
+        <div class="w-20 shrink-0">
+            <p class="font-semibold" th:text="${#temporals.format(start, 'HH:mm')}">09:30</p>
+            <p class="text-xs text-ink-600" th:text="${#temporals.format(start, 'EEE d MMM')}">Sat 18 Oct</p>
+        </div>
+        <div>
+            <p class="font-semibold">
+                <span th:text="${b.customerName() != null ? b.customerName() : 'Customer'}">Wanjiku</span>
+                <span class="font-normal text-ink-600" th:text="'· +' + ${b.customerPhone()}">· +254712345678</span>
+            </p>
+            <p class="text-sm text-ink-700">
+                <span th:text="${b.serviceName()}">Dental check-up</span><span th:if="${b.resourceName() != null}" th:text="' with ' + ${b.resourceName()}"> with Dr Otieno</span>
+                <span class="text-ink-600" th:text="' · ' + ${b.shortCode()}"> · 1A2B3C</span>
+            </p>
+            <p th:if="${b.notes() != null}" class="text-sm text-ink-600" th:text="${b.notes()}">Notes</p>
+        </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+        <span class="badge"
+              th:classappend="${b.status().name() == 'CONFIRMED'} ? 'bg-brand-50 text-brand-800' : (${b.status().name() == 'PENDING_PAYMENT' or b.status().name() == 'HELD'} ? 'bg-amber-50 text-amber-900' : (${b.status().name() == 'CANCELLED' or b.status().name() == 'NO_SHOW'} ? 'bg-red-50 text-red-800' : 'bg-gray-100 text-ink-700'))"
+              th:text="${b.status().label()}">Confirmed</span>
+        <a th:if="${b.conversationId() != null}" th:href="@{'/app/conversations/' + ${b.conversationId()}}" class="link text-sm">Chat</a>
+        <form th:if="${b.status().name() == 'PENDING_PAYMENT' or b.status().name() == 'HELD'}" th:action="@{'/app/bookings/' + ${b.id()} + '/confirm'}" method="post">
+            <button type="submit" class="btn-secondary text-sm">Deposit received</button>
+        </form>
+        <a th:if="${b.status().open()}" th:href="@{'/app/bookings/' + ${b.id()} + '/move'}" class="btn-secondary text-sm">Move</a>
+        <form th:if="${b.status().open()}" th:action="@{'/app/bookings/' + ${b.id()} + '/cancel'}" method="post">
+            <button type="submit" class="btn-secondary text-sm">Cancel</button>
+        </form>
+        <th:block th:if="${b.status().name() == 'CONFIRMED' and !b.startsAt().isAfter(now)}">
+            <form th:action="@{'/app/bookings/' + ${b.id()} + '/status'}" method="post">
+                <input type="hidden" name="outcome" value="completed"><input type="hidden" name="back" th:value="${back}">
+                <button type="submit" class="btn-secondary text-sm">Completed</button>
+            </form>
+            <form th:action="@{'/app/bookings/' + ${b.id()} + '/status'}" method="post">
+                <input type="hidden" name="outcome" value="no_show"><input type="hidden" name="back" th:value="${back}">
+                <button type="submit" class="btn-secondary text-sm">No-show</button>
+            </form>
+        </th:block>
+    </div>
+</li>
+</body>
+</html>

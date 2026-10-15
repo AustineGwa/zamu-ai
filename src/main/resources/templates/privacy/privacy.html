@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Privacy and data · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-3xl space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+
+        <!-- NFR-12 -->
+        <section class="card" aria-labelledby="customer-heading">
+            <h2 id="customer-heading" class="text-lg font-semibold">A customer's data</h2>
+            <p class="mt-1 text-sm text-ink-600">When a customer asks for their data or to be forgotten, find them by phone number.
+                Complete requests within 14 days. Exports and deletions are recorded in the audit log.</p>
+            <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/privacy'}" method="get" class="mt-4 flex flex-wrap items-end gap-3">
+                <label class="text-sm"><span class="field-label">Phone number</span>
+                    <input name="phone" th:value="${phone}" inputmode="tel" class="field-input" placeholder="0712 345 678" required></label>
+                <button type="submit" class="btn-secondary">Find</button>
+            </form>
+            <p th:if="${searched == true and customer == null}" class="mt-4 text-sm text-ink-700">No customer with that number.</p>
+            <div th:if="${customer != null}" class="mt-4 rounded-md border border-gray-200 p-4">
+                <p class="font-semibold">
+                    <span th:text="${customer.name() != null ? customer.name() : 'No name'}">Wanjiku</span>
+                    <span class="font-normal text-ink-600" th:text="'· +' + ${customer.phone()}">· +254712345678</span>
+                </p>
+                <p class="text-sm text-ink-700" th:text="'First contact ' + ${T(ai.zamu.shared.time.ZamuTime).display(customer.createdAt())} + ' · ' + ${customer.conversations()} + ' conversations'">First contact</p>
+                <div class="mt-3 flex flex-wrap items-end gap-3">
+                    <a th:href="@{'/admin/tenants/' + ${tenant.id} + '/privacy/customers/' + ${customer.id()} + '/export'}" class="btn-secondary">Download their data (JSON)</a>
+                    <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/privacy/customers/' + ${customer.id()} + '/delete'}" method="post"
+                          class="flex flex-wrap items-end gap-2">
+                        <label class="text-sm"><span class="field-label">Type the phone number to delete</span>
+                            <input name="confirmPhone" inputmode="tel" class="field-input" required autocomplete="off"></label>
+                        <button type="submit" class="btn-danger">Delete customer</button>
+                    </form>
+                </div>
+                <p class="mt-2 text-xs text-ink-600">Deletes the customer, their chats, handovers and bookings. Payment records are kept for 7 years.</p>
+            </div>
+        </section>
+
+        <!-- NFR-11 -->
+        <section class="card" aria-labelledby="retention-heading">
+            <h2 id="retention-heading" class="text-lg font-semibold">Retention</h2>
+            <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/privacy/retention'}" method="post" class="mt-4 space-y-4">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="text-sm"><span class="field-label">Keep conversations for (months)</span>
+                        <input name="conversationMonths" type="number" min="1" max="120" th:value="${retention.conversationMonths()}" class="field-input"></label>
+                    <label class="text-sm"><span class="field-label">Delete data this many days after offboarding</span>
+                        <input name="offboardPurgeDays" type="number" min="1" max="365" th:value="${retention.offboardPurgeDays()}" class="field-input"></label>
+                </div>
+                <p class="field-hint">Conversations with no message for longer are deleted nightly. Usage, the audit log and payment records are kept.</p>
+                <button type="submit" class="btn-primary">Save retention</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="offboard-heading">
+            <h2 id="offboard-heading" class="text-lg font-semibold">Offboard this client</h2>
+            <p class="mt-1 text-sm text-ink-600">Zamu stops for good and their data is deleted after the retention period above.
+                Pause Zamu on the Go-live step first.</p>
+            <p th:if="${tenant.status().name() == 'OFFBOARDED'}" class="mt-3 font-semibold text-ink-900">This client is offboarded.</p>
+            <form th:unless="${tenant.status().name() == 'OFFBOARDED'}" th:action="@{'/admin/tenants/' + ${tenant.id} + '/privacy/offboard'}"
+                  method="post" class="mt-3 flex flex-wrap items-end gap-2">
+                <label class="text-sm"><span class="field-label" th:text="'Type ' + ${tenant.displayName} + ' to confirm'">Type the name</span>
+                    <input name="confirmName" class="field-input" required autocomplete="off"></label>
+                <button type="submit" class="btn-danger">Offboard</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

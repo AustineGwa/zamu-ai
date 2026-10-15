@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: page(~{::title}, ~{::main})}">
+<head><title>Calendar · Setup · Zamu</title></head>
+<body>
+<main id="main" class="mx-auto max-w-6xl px-4 py-6">
+    <div th:replace="~{fragments/wizard :: header}"></div>
+    <div class="max-w-2xl space-y-6">
+        <div th:replace="~{fragments/forms :: flash}"></div>
+        <section class="card" aria-labelledby="calendar-heading">
+            <h2 id="calendar-heading" class="text-lg font-semibold">Google Calendar</h2>
+            <p class="mt-1 text-sm text-ink-600">
+                Zamu checks the calendar before offering a time and again just before booking it, so appointments staff
+                add by hand are never double-booked. Bookings appear in the calendar, marked held until confirmed.
+            </p>
+
+            <div th:if="${!calendar.providerConfigured()}" class="flash-error mt-4" role="alert">
+                Google sign-in isn't set up on this Zamu installation. Set ZAMU_GOOGLE_CLIENT_ID and
+                ZAMU_GOOGLE_CLIENT_SECRET, and register this redirect URI on the Google OAuth client:
+                <code class="break-all" th:text="${redirectUri}">https://…/admin/calendar/callback</code>.
+                Until then, slots use opening hours and Zamu's own bookings only.
+            </div>
+
+            <div th:if="${calendar.connected()}" class="mt-4 space-y-4">
+                <p class="flex items-center gap-2 font-semibold text-brand-800">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+                    Connected
+                </p>
+                <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/calendar/settings'}" method="post" class="flex flex-wrap items-end gap-3">
+                    <label class="grow text-sm"><span class="field-label">Calendar ID</span>
+                        <input name="calendarId" th:value="${calendar.calendarId()}" class="field-input"></label>
+                    <button type="submit" class="btn-secondary">Save</button>
+                </form>
+                <p class="field-hint">"primary" is the main calendar of the Google account that signed in.</p>
+                <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/calendar/disconnect'}" method="post">
+                    <button type="submit" class="btn-secondary">Disconnect</button>
+                </form>
+            </div>
+
+            <div th:if="${!calendar.connected()}" class="mt-4 space-y-3">
+                <p th:if="${calendar.revoked()}" class="flash-error" role="alert">
+                    Google no longer allows Zamu to use this calendar, so bookings go to staff. Connect it again.
+                </p>
+                <form th:if="${calendar.providerConfigured()}" th:action="@{'/admin/tenants/' + ${tenant.id} + '/calendar/connect'}" method="post">
+                    <button type="submit" class="btn-primary" th:text="${calendar.revoked()} ? 'Reconnect Google Calendar' : 'Connect Google Calendar'">Connect Google Calendar</button>
+                </form>
+                <p class="text-sm text-ink-600">The business owner signs in with the Google account that holds the bookings calendar.
+                    Zamu asks only for calendar events and free/busy times.</p>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>
