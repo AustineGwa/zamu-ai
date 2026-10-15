@@ -45,9 +45,13 @@ public class SecurityConfig {
                 .requestMatchers("/webhooks/**").permitAll()
                 // Local h2 profile only: the WhatsApp simulator (controller exists only in that profile).
                 .requestMatchers("/dev/**").authenticated()
+                // Spec: admin console screens. Usage and billing, and the audit log, are for admins only.
+                .requestMatchers("/admin/usage", "/admin/usage/**", "/admin/usage.csv", "/admin/audit", "/admin/audit/**")
+                        .hasRole(ZamuRole.ADMIN.name())
                 .requestMatchers("/admin/**").hasAnyRole(ZamuRole.OPERATOR.name(), ZamuRole.ADMIN.name())
                 // Spec: Permissions. Manage staff users, reports and settings are owner-only in the dashboard.
-                .requestMatchers("/app/users", "/app/users/**", "/app/settings", "/app/settings/**")
+                .requestMatchers("/app/users", "/app/users/**", "/app/settings", "/app/settings/**", "/app/reports",
+                        "/app/reports/**", "/app/requests", "/app/requests/**")
                         .hasRole(ZamuRole.OWNER.name())
                 .requestMatchers("/app/**").hasAnyRole(ZamuRole.STAFF.name(), ZamuRole.OWNER.name())
                 .anyRequest().authenticated())
@@ -63,7 +67,7 @@ public class SecurityConfig {
                 .deleteCookies("ZAMU_SESSION"))
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp.policyDirectives(
-                        "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+                        "default-src 'self'; img-src 'self' data: https://images.unsplash.com; style-src 'self'; script-src 'self'; "
                                 + "frame-ancestors 'none'; form-action 'self'; base-uri 'self'"))
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)));
         return http.build();

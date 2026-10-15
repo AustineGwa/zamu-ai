@@ -109,6 +109,16 @@ class MessageRepository {
         return newestFirst.reversed();
     }
 
+    /** AI step: the model's confidence and the knowledge base entries a bot reply used (spec: messages). */
+    int updateAiMeta(TenantId tenantId, UUID id, java.math.BigDecimal confidence, String entryIdsJson) {
+        return jdbc.sql("UPDATE messages SET ai_confidence = :confidence, kb_entry_ids = :entryIds WHERE tenant_id = :tenantId AND id = :id")
+                .param("tenantId", tenantId.bytes())
+                .param("id", Uuids.toBytes(id))
+                .param("confidence", confidence)
+                .param("entryIds", entryIdsJson)
+                .update();
+    }
+
     int markSent(TenantId tenantId, UUID id, String waMessageId, Instant now) {
         return jdbc.sql("""
                 UPDATE messages SET status = 'sent', wa_message_id = :waMessageId, updated_at = :now
@@ -131,6 +141,26 @@ class MessageRepository {
                 .param("status", status.dbValue())
                 .param("errorCode", errorCode)
                 .param("now", ZamuTime.toDb(now))
+                .update();
+    }
+
+    // --- privacy (NFR-11, NFR-12) ---
+
+    java.util.List<Message> findAllForConversation(TenantId tenantId, UUID conversationId) {
+        return jdbc.sql("SELECT " + COLUMNS + """
+                 FROM messages WHERE tenant_id = :tenantId AND conversation_id = :conversationId
+                 ORDER BY created_at, id
+                """)
+                .param("tenantId", tenantId.bytes())
+                .param("conversationId", Uuids.toBytes(conversationId))
+                .query(MAPPER)
+                .list();
+    }
+
+    int deleteForConversation(TenantId tenantId, UUID conversationId) {
+        return jdbc.sql("DELETE FROM messages WHERE tenant_id = :tenantId AND conversation_id = :conversationId")
+                .param("tenantId", tenantId.bytes())
+                .param("conversationId", Uuids.toBytes(conversationId))
                 .update();
     }
 }

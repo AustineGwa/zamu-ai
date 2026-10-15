@@ -114,4 +114,8 @@ class WaTemplateRepository {
                 .param("now", ZamuTime.toDb(now))
                 .update();
     }
+
+    int deleteAllForTenant(TenantId tenantId) {
+        return jdbc.sql("DELETE FROM wa_templates WHERE tenant_id = :tenantId").param("tenantId", tenantId.bytes()).update();
+    }
 }

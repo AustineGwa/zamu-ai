@@ -83,6 +83,16 @@ class UserRepository {
                 .optional();
     }
 
+    @CrossTenant("Zamu team members have no tenant; used to alert operators about integration problems")
+    List<String> findActivePlatformEmails() {
+        return jdbc.sql("""
+                SELECT email FROM users WHERE tenant_id IS NULL AND disabled_at IS NULL
+                   AND role IN ('operator', 'admin') ORDER BY email
+                """)
+                .query(String.class)
+                .list();
+    }
+
     @CrossTenant("Emails are unique across all tenants because login is by email alone")
     boolean existsByEmail(String email) {
         return jdbc.sql("SELECT COUNT(*) FROM users WHERE email = :email")

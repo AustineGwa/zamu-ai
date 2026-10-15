@@ -44,6 +44,15 @@ services:
         sync: false
       - key: ZAMU_BOOTSTRAP_ADMIN_EMAIL
         sync: false
+      # Claude for AI answers. Required with the mysql profile. On the h2 quick test, also set
+      # ZAMU_AI_CHAT_PROVIDER=anthropic in the dashboard to use it instead of the offline stand-in.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Google Calendar for bookings; register {your URL}/admin/calendar/callback on the OAuth client.
+      - key: ZAMU_GOOGLE_CLIENT_ID
+        sync: false
+      - key: ZAMU_GOOGLE_CLIENT_SECRET
+        sync: false
       - key: ZAMU_WHATSAPP_APP_SECRET
         sync: false
       - key: ZAMU_WHATSAPP_VERIFY_TOKEN

@@ -105,4 +105,17 @@ class CustomerRepository {
                 .param("now", ZamuTime.toDb(now))
                 .update();
     }
+
+    // --- privacy (NFR-11, NFR-12) ---
+
+    int delete(TenantId tenantId, UUID id) {
+        return jdbc.sql("DELETE FROM customers WHERE tenant_id = :tenantId AND id = :id")
+                .param("tenantId", tenantId.bytes())
+                .param("id", Uuids.toBytes(id))
+                .update();
+    }
+
+    int deleteAllForTenant(TenantId tenantId) {
+        return jdbc.sql("DELETE FROM customers WHERE tenant_id = :tenantId").param("tenantId", tenantId.bytes()).update();
+    }
 }

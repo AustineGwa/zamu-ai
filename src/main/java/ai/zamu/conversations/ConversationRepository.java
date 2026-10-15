@@ -196,4 +196,41 @@ class ConversationRepository {
     private static String escapeLike(String value) {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
+
+    // --- privacy (NFR-11, NFR-12) ---
+
+    java.util.List<UUID> findIdsForCustomer(TenantId tenantId, UUID customerId) {
+        return jdbc.sql("SELECT id FROM conversations WHERE tenant_id = :tenantId AND customer_id = :customerId ORDER BY opened_at")
+                .param("tenantId", tenantId.bytes())
+                .param("customerId", Uuids.toBytes(customerId))
+                .query((rs, n) -> Uuids.read(rs, "id"))
+                .list();
+    }
+
+    /** Conversations with no message since {@code cutoff} (retention, NFR-11). */
+    java.util.List<UUID> findIdsInactiveSince(TenantId tenantId, Instant cutoff, int limit) {
+        return jdbc.sql("""
+                SELECT id FROM conversations WHERE tenant_id = :tenantId AND last_message_at < :cutoff
+                 ORDER BY last_message_at LIMIT :limit
+                """)
+                .param("tenantId", tenantId.bytes())
+                .param("cutoff", ZamuTime.toDb(cutoff))
+                .param("limit", limit)
+                .query((rs, n) -> Uuids.read(rs, "id"))
+                .list();
+    }
+
+    java.util.List<UUID> findAllIds(TenantId tenantId) {
+        return jdbc.sql("SELECT id FROM conversations WHERE tenant_id = :tenantId")
+                .param("tenantId", tenantId.bytes())
+                .query((rs, n) -> Uuids.read(rs, "id"))
+                .list();
+    }
+
+    int delete(TenantId tenantId, UUID id) {
+        return jdbc.sql("DELETE FROM conversations WHERE tenant_id = :tenantId AND id = :id")
+                .param("tenantId", tenantId.bytes())
+                .param("id", Uuids.toBytes(id))
+                .update();
+    }
 }

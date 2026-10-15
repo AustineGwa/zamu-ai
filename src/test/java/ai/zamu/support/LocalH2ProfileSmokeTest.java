@@ -6,11 +6,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
+import ai.zamu.conversations.Channel;
+import ai.zamu.conversations.ConversationService;
+import ai.zamu.conversations.InboundMessage;
+import ai.zamu.conversations.MessageType;
+import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.jobs.JobDrain;
 import ai.zamu.shared.security.ZamuPrincipal;
 import ai.zamu.shared.security.ZamuRole;
@@ -48,6 +54,12 @@ class LocalH2ProfileSmokeTest {
 
     @Autowired
     JobDrain jobs;
+
+    @Autowired
+    ConversationService conversations;
+
+    @Autowired
+    JdbcClient jdbc;
 
     @Test
     void withNoProfileSetTheDefaultIsH2() {
@@ -123,5 +135,61 @@ class LocalH2ProfileSmokeTest {
         }
         assertThat(mvc.perform(get("/admin/tenants/{id}/templates", demo).with(TenantFixture.as(operator)))
                 .andReturn().getResponse().getContentAsString()).contains("follow_up").contains("Approved");
+    }
+
+    @Test
+    void AI_01_theDemoClinicAnswersFromItsKnowledgeBaseWithoutAnApiKey() {
+        jobs.drain(); // demo entries are embedded by jobs
+        TenantId demo = TenantId.of(tenants.listAll().getFirst().id());
+        conversations.receive(new InboundMessage(Channel.WHATSAPP, demo, "254700111222", "Otieno", "wamid.smoke.ai",
+                MessageType.TEXT, "How much is a consultation?", null, java.time.Instant.now()));
+
+        java.util.List<String> replies = jdbc.sql("SELECT body FROM messages WHERE tenant_id = ? AND direction = 'out' ORDER BY id")
+                .param(demo.bytes()).query(String.class).list();
+        assertThat(replies).anySatisfy(r -> assertThat(r).contains("KES 2,000"));
+    }
+
+    @Test
+    void adminPagesForKnowledgeTestsAndGoLiveRender() throws Exception {
+        UUID demo = tenants.listAll().getFirst().id();
+        ZamuPrincipal operator = new ZamuPrincipal(UUID.randomUUID(), null, ZamuRole.OPERATOR, "ops@zamu.local", "Ops");
+        for (String path : new String[] {"/admin/tenants/{id}/kb", "/admin/tenants/{id}/eval",
+                "/admin/tenants/{id}/setup/go-live", "/admin/tenants/{id}/setup/tone", "/admin/tenants/{id}/setup/services",
+                "/admin/tenants/{id}/setup/calendar", "/admin/tenants/{id}/setup/hours"}) {
+            MvcResult page = mvc.perform(get(path, demo).with(TenantFixture.as(operator))).andReturn();
+            assertThat(page.getResponse().getStatus()).as(path).isEqualTo(200);
+        }
+        assertThat(mvc.perform(get("/admin/tenants/{id}/setup/go-live", demo).with(TenantFixture.as(operator)))
+                .andReturn().getResponse().getContentAsString()).contains("AI provider configured");
+    }
+
+    @Test
+    void milestone7PagesRenderForAdminsOperatorsAndOwners() throws Exception {
+        UUID demo = tenants.listAll().getFirst().id();
+        ZamuPrincipal admin = new ZamuPrincipal(UUID.randomUUID(), null, ZamuRole.ADMIN, "admin@zamu.local", "Admin");
+        ZamuPrincipal owner = new ZamuPrincipal(UUID.randomUUID(), TenantId.of(demo), ZamuRole.OWNER, "o@demo.local", "Owner");
+        for (String path : new String[] {"/admin/review", "/admin/change-requests", "/admin/health", "/admin/usage",
+                "/admin/audit", "/admin/tenants/{id}/privacy"}) {
+            MvcResult page = mvc.perform(get(path, demo).with(TenantFixture.as(admin))).andReturn();
+            assertThat(page.getResponse().getStatus()).as(path).isEqualTo(200);
+        }
+        for (String path : new String[] {"/app/reports", "/app/requests"}) {
+            MvcResult page = mvc.perform(get(path).with(TenantFixture.as(owner))).andReturn();
+            assertThat(page.getResponse().getStatus()).as(path).isEqualTo(200);
+        }
+        assertThat(mvc.perform(get("/app/reports/weekly.csv").with(TenantFixture.as(owner))).andReturn()
+                .getResponse().getContentAsString()).startsWith("metric,value\n");
+    }
+
+    @Test
+    void BK_03_theDemoClinicOffersBookableTimesLocally() {
+        jobs.drain();
+        TenantId demo = TenantId.of(tenants.listAll().getFirst().id());
+        conversations.receive(new InboundMessage(Channel.WHATSAPP, demo, "254700333444", "Akinyi", "wamid.smoke.bk",
+                MessageType.TEXT, "I want to book a consultation", null, java.time.Instant.now()));
+
+        String last = jdbc.sql("SELECT type FROM messages WHERE tenant_id = ? AND direction = 'out' ORDER BY created_at DESC, id DESC LIMIT 1")
+                .param(demo.bytes()).query(String.class).single();
+        assertThat(last).isIn("interactive", "text"); // times, or a handover when the clinic is closed all month
     }
 }

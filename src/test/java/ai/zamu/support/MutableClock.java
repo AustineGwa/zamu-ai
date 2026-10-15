@@ -28,9 +28,26 @@ public class MutableClock extends Clock {
         return ZoneOffset.UTC;
     }
 
+    /** A view in another zone that still follows this clock, so LocalDate.now(clock.withZone(z)) is right. */
     @Override
     public Clock withZone(ZoneId zone) {
-        return this;
+        MutableClock base = this;
+        return new Clock() {
+            @Override
+            public ZoneId getZone() {
+                return zone;
+            }
+
+            @Override
+            public Clock withZone(ZoneId other) {
+                return base.withZone(other);
+            }
+
+            @Override
+            public Instant instant() {
+                return base.instant();
+            }
+        };
     }
 
     @Override

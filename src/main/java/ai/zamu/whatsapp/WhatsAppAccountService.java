@@ -76,4 +76,10 @@ public class WhatsAppAccountService {
     void markWebhookVerified(TenantId tenantId) {
         repository.markWebhookVerified(tenantId);
     }
+
+    /** NFR-11: offboarding purge; the access token goes with the row. */
+    @Transactional
+    public void purgeTenant(TenantId tenantId) {
+        repository.deleteForTenant(tenantId);
+    }
 }

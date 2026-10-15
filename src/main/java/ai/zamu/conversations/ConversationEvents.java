@@ -14,6 +14,10 @@ public final class ConversationEvents {
     public record BillableConversationStarted(TenantId tenantId, Instant at) {
     }
 
+    /** A template message was queued: Meta bills these per message (REP-03 WhatsApp billable messages). */
+    public record TemplateQueued(TenantId tenantId, Instant at) {
+    }
+
     /** A message was stored, inbound or outbound. */
     public record MessageRecorded(TenantId tenantId, MessageDirection direction, Instant at) {
     }

@@ -101,6 +101,12 @@ public class UserService {
                 .toList();
     }
 
+    /** Zamu operators and admins, for alerts such as a revoked calendar connection (BK-01). */
+    @Transactional(readOnly = true)
+    public List<String> activePlatformEmails() {
+        return users.findActivePlatformEmails();
+    }
+
     /** Display names of this tenant's users, for sender labels in the inbox. Unknown IDs are left out. */
     @Transactional(readOnly = true)
     public Map<UUID, String> namesById(TenantId tenantId) {

@@ -57,6 +57,27 @@
                 <button type="submit" class="btn-primary">Save hours</button>
             </form>
         </section>
+
+        <!-- Holidays: whole closed days (BK-02). -->
+        <section class="card max-w-2xl" aria-labelledby="holidays-heading">
+            <h2 id="holidays-heading" class="text-lg font-semibold">Closed days</h2>
+            <p class="mt-1 text-sm text-ink-600">Public holidays and other days off. Zamu offers no bookings on these days.</p>
+            <ul th:if="${!#lists.isEmpty(holidays)}" class="mt-4 divide-y divide-gray-200 border-y border-gray-200">
+                <li th:each="h : ${holidays}" class="flex items-center justify-between gap-3 py-2">
+                    <span><span class="font-semibold" th:text="${#temporals.format(h.date(), 'EEE d MMM yyyy')}">Thu 25 Dec 2026</span>
+                        <span class="text-ink-600" th:if="${h.note() != null}" th:text="' · ' + ${h.note()}"> · Christmas</span></span>
+                    <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/hours/holidays/' + ${h.id()} + '/remove'}" method="post">
+                        <button type="submit" class="link text-sm">Remove</button>
+                    </form>
+                </li>
+            </ul>
+            <form th:action="@{'/admin/tenants/' + ${tenant.id} + '/setup/hours/holidays'}" method="post"
+                  class="mt-4 flex flex-wrap items-end gap-3">
+                <label class="text-sm"><span class="field-label">Date</span><input type="date" name="day" class="field-input" required></label>
+                <label class="grow text-sm"><span class="field-label">Note (optional)</span><input name="note" class="field-input" placeholder="Jamhuri Day"></label>
+                <button type="submit" class="btn-secondary">Add closed day</button>
+            </form>
+        </section>
     </div>
 </main>
 </body>

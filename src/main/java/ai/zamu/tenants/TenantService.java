@@ -53,6 +53,8 @@ public class TenantService {
                 request.plan().conversationsPerMonth(),
                 DEFAULT_CONFIDENCE_THRESHOLD,
                 null,
+                null,
+                null,
                 now,
                 now);
         repository.insert(tenant);
@@ -117,6 +119,67 @@ public class TenantService {
         audit.record(AuditEvent.of(tenantId, staffOnly ? "tenant.staff_only_on" : "tenant.staff_only_off", "tenant",
                 tenantId.value()).withBefore(before.status().name()).withAfter(after.status().name()));
         return after;
+    }
+
+    /** Setup wizard, tone step: AI-03 confidence threshold, AI-04 emergency number, HO-01 handover topics. */
+    @Transactional
+    public TenantView updateSafety(TenantId tenantId, TenantSafetyForm form) {
+        TenantView before = get(tenantId);
+        repository.updateSafety(tenantId, form.confidenceThreshold(), blankToNull(form.emergencyNumber()),
+                blankToNull(form.handoverTopics()), clock.instant());
+        TenantView after = get(tenantId);
+        audit.record(AuditEvent.of(tenantId, "tenant.safety_updated", "tenant", tenantId.value())
+                .withBefore(java.util.Map.of("threshold", before.confidenceThreshold().toPlainString()))
+                .withAfter(java.util.Map.of("threshold", after.confidenceThreshold().toPlainString())));
+        return after;
+    }
+
+    /** Owner or admin go-live (spec: setup wizard, go-live step): onboarding or paused becomes live. */
+    @Transactional
+    public TenantView goLive(TenantId tenantId) {
+        return changeStatus(tenantId, TenantStatus.LIVE, java.util.Set.of(TenantStatus.ONBOARDING, TenantStatus.PAUSED),
+                "tenant.went_live");
+    }
+
+    /** Admin pause: Zamu stops replying (MSG-09) until the tenant goes live again. */
+    @Transactional
+    public TenantView pause(TenantId tenantId) {
+        return changeStatus(tenantId, TenantStatus.PAUSED,
+                java.util.Set.of(TenantStatus.LIVE, TenantStatus.STAFF_ONLY, TenantStatus.ONBOARDING), "tenant.paused");
+    }
+
+    /**
+     * Offboarding (NFR-11): Zamu stops for good; the tenant's data is deleted after the retention period, except
+     * usage, audit and payment records. Only from paused.
+     */
+    @Transactional
+    public TenantView offboard(TenantId tenantId) {
+        return changeStatus(tenantId, TenantStatus.OFFBOARDED, java.util.Set.of(TenantStatus.PAUSED), "tenant.offboarded");
+    }
+
+    /** When an offboarded tenant was offboarded (its last status change), for the purge (NFR-11). */
+    @Transactional(readOnly = true)
+    public java.util.Optional<Instant> offboardedAt(TenantId tenantId) {
+        return repository.findById(tenantId).filter(t -> t.status() == TenantStatus.OFFBOARDED).map(Tenant::updatedAt);
+    }
+
+    private TenantView changeStatus(TenantId tenantId, TenantStatus target, java.util.Set<TenantStatus> from,
+            String action) {
+        TenantView before = get(tenantId);
+        if (before.status() == target) {
+            return before;
+        }
+        if (!from.contains(before.status())) {
+            throw new IllegalTenantStatusException(before.status(), target);
+        }
+        repository.updateStatus(tenantId, target, clock.instant());
+        audit.record(AuditEvent.of(tenantId, action, "tenant", tenantId.value())
+                .withBefore(before.status().name()).withAfter(target.name()));
+        return get(tenantId);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     /** Saves the holding reply used in staff-only and paused mode; blank means the standard wording. */

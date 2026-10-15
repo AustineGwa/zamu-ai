@@ -34,6 +34,36 @@
                 <button type="submit" class="btn-primary">Save</button>
             </form>
         </section>
+
+        <!-- AI-03, AI-04, HO-01 -->
+        <section class="card" aria-labelledby="safety-heading">
+            <h2 id="safety-heading" class="text-lg font-semibold">Safety</h2>
+            <form th:action="@{/admin/tenants/{id}/setup/tone/safety(id=${tenant.id})}" th:object="${safety}" method="post"
+                  class="mt-4 space-y-5" novalidate>
+                <div>
+                    <label for="emergencyNumber" class="field-label">Emergency number</label>
+                    <input id="emergencyNumber" th:field="*{emergencyNumber}" class="field-input" placeholder="999 or 0700 395 395"
+                           th:attr="aria-invalid=${#fields.hasErrors('emergencyNumber')} ? 'true' : null">
+                    <p class="field-hint">Used in the emergency reply when a customer describes symptoms or an emergency. Empty means 999 or 112.</p>
+                    <p th:if="${#fields.hasErrors('emergencyNumber')}" class="field-error" th:errors="*{emergencyNumber}"></p>
+                </div>
+                <div>
+                    <label for="handoverTopics" class="field-label">Always hand over these topics</label>
+                    <textarea id="handoverTopics" th:field="*{handoverTopics}" rows="4" class="field-input"
+                              placeholder="refund&#10;complaint&#10;lab results"></textarea>
+                    <p class="field-hint">One word or phrase per line. A message mentioning one goes straight to staff.</p>
+                    <p th:if="${#fields.hasErrors('handoverTopics')}" class="field-error" th:errors="*{handoverTopics}"></p>
+                </div>
+                <div>
+                    <label for="confidenceThreshold" class="field-label">Confidence needed to answer</label>
+                    <input id="confidenceThreshold" th:field="*{confidenceThreshold}" inputmode="decimal" class="field-input w-32"
+                           th:attr="aria-invalid=${#fields.hasErrors('confidenceThreshold')} ? 'true' : null">
+                    <p class="field-hint">Between 0.30 and 0.95. Below this, Zamu says it isn't sure and hands over. Default 0.60.</p>
+                    <p th:if="${#fields.hasErrors('confidenceThreshold')}" class="field-error" th:errors="*{confidenceThreshold}"></p>
+                </div>
+                <button type="submit" class="btn-primary">Save safety settings</button>
+            </form>
+        </section>
     </div>
 </main>
 </body>

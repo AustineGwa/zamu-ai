@@ -117,7 +117,7 @@ public class BusinessHoursService {
         }
     }
 
-    static String label(DayOfWeek day) {
+    public static String label(DayOfWeek day) {
         return day.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 }

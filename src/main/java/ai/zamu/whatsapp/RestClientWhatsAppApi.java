@@ -18,6 +18,8 @@ import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import ai.zamu.conversations.Interactive;
+
 /**
  * WhatsApp Cloud API over HTTPS (spec: External integrations, WhatsApp). One client for all tenants; each call
  * carries the tenant's own token.
@@ -72,6 +74,44 @@ class RestClientWhatsAppApi implements WhatsAppApi {
         body.put("to", to);
         body.put("type", "template");
         body.put("template", template);
+        return messageId(post(credentials, "/" + credentials.phoneNumberId() + "/messages", body));
+    }
+
+    /**
+     * Interactive list or reply-button message. ASSUMPTION: payload shape as in Meta's Cloud API reference
+     * ("interactive" with type "list" and sections/rows, or type "button" with action.buttons of type "reply").
+     */
+    @Override
+    public String sendInteractive(Credentials credentials, String to, String text, Interactive options) {
+        Map<String, Object> interactive = new LinkedHashMap<>();
+        interactive.put("body", Map.of("text", text));
+        if (options.asButtons()) {
+            interactive.put("type", "button");
+            List<Map<String, Object>> buttons = new ArrayList<>();
+            for (Interactive.Choice c : options.choices()) {
+                buttons.add(Map.of("type", "reply", "reply", Map.of("id", c.id(), "title", c.title())));
+            }
+            interactive.put("action", Map.of("buttons", buttons));
+        } else {
+            interactive.put("type", "list");
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (Interactive.Choice c : options.choices()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("id", c.id());
+                row.put("title", c.title());
+                if (c.description() != null && !c.description().isBlank()) {
+                    row.put("description", c.description());
+                }
+                rows.add(row);
+            }
+            interactive.put("action", Map.of("button", options.button(), "sections", List.of(Map.of("rows", rows))));
+        }
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("messaging_product", "whatsapp");
+        body.put("recipient_type", "individual");
+        body.put("to", to);
+        body.put("type", "interactive");
+        body.put("interactive", interactive);
         return messageId(post(credentials, "/" + credentials.phoneNumberId() + "/messages", body));
     }
 

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import ai.zamu.conversations.Interactive;
 import ai.zamu.shared.logging.Masking;
 
 /**
@@ -29,6 +30,12 @@ class ConsoleWhatsAppApi implements WhatsAppApi {
     @Override
     public String sendTemplate(Credentials credentials, String to, String name, String language, List<String> params) {
         log.info("[local WhatsApp] template {} ({}) to {}", name, language, Masking.phone(to));
+        return fakeId();
+    }
+
+    @Override
+    public String sendInteractive(Credentials credentials, String to, String body, Interactive options) {
+        log.info("[local WhatsApp] {} options to {}", options.choices().size(), Masking.phone(to));
         return fakeId();
     }
 

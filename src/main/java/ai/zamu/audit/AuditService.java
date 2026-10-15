@@ -70,4 +70,11 @@ public class AuditService {
         }
         return null;
     }
+
+    /** NFR-14: the admin console's audit log search, newest first, at most 500 rows. */
+    @Transactional(readOnly = true)
+    public java.util.List<AuditSearchRow> search(UUID tenantId, String action, java.time.Instant from,
+            java.time.Instant to) {
+        return repository.search(tenantId, action, from, to, 500);
+    }
 }

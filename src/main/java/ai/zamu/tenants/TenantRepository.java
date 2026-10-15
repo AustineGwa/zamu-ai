@@ -108,6 +108,21 @@ class TenantRepository {
                 .update();
     }
 
+    int updateSafety(TenantId tenantId, java.math.BigDecimal confidenceThreshold, String emergencyNumber,
+            String handoverTopics, Instant now) {
+        return jdbc.sql("""
+                UPDATE tenants SET confidence_threshold = :threshold, emergency_number = :emergencyNumber,
+                                   handover_topics = :topics, updated_at = :now
+                 WHERE id = :id
+                """)
+                .param("id", tenantId.bytes())
+                .param("threshold", confidenceThreshold)
+                .param("emergencyNumber", emergencyNumber)
+                .param("topics", handoverTopics)
+                .param("now", ZamuTime.toDb(now))
+                .update();
+    }
+
     int updateTone(TenantId tenantId, TenantTone tone, TenantLanguage language, Instant now) {
         return jdbc.sql("""
                 UPDATE tenants SET tone = :tone, default_language = :language, updated_at = :now

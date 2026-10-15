@@ -34,6 +34,28 @@
         </div>
         <button type="submit" class="btn-primary">Send as customer</button>
     </form>
+
+    <!-- Options from Zamu's latest message to this number (lists and buttons, BK-03): tap one as the customer. -->
+    <section th:if="${account != null and phone != null}" class="card mt-6" aria-labelledby="options-heading">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="options-heading" class="font-semibold">Zamu's latest options</h2>
+            <a th:href="@{/dev/whatsapp(as=${phone})}" class="link text-sm">Refresh</a>
+        </div>
+        <p th:if="${options == null}" class="mt-2 text-sm text-ink-600">None yet. Zamu's reply takes a moment; refresh to see a list or buttons it sent.</p>
+        <div th:if="${options != null}" class="mt-3 flex flex-wrap gap-2">
+            <form th:each="c : ${options.choices()}" th:action="@{/dev/whatsapp}" method="post">
+                <input type="hidden" name="phone" th:value="${phone}">
+                <input type="hidden" name="name" th:value="${name}">
+                <input type="hidden" name="kind" value="reply">
+                <input type="hidden" name="replyId" th:value="${c.id()}">
+                <input type="hidden" name="text" th:value="${c.title()}">
+                <button type="submit" class="btn-secondary text-left">
+                    <span class="block" th:text="${c.title()}">Sat 18 Oct, 9:30</span>
+                    <span th:if="${c.description() != null}" class="block text-xs font-normal text-ink-600" th:text="${c.description()}">Dr Otieno</span>
+                </button>
+            </form>
+        </div>
+    </section>
 </main>
 </body>
 </html>

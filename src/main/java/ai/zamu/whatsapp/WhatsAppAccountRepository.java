@@ -111,4 +111,8 @@ class WhatsAppAccountRepository {
                 .query(Integer.class)
                 .single() > 0;
     }
+
+    int deleteForTenant(TenantId tenantId) {
+        return jdbc.sql("DELETE FROM whatsapp_accounts WHERE tenant_id = :tenantId").param("tenantId", tenantId.bytes()).update();
+    }
 }

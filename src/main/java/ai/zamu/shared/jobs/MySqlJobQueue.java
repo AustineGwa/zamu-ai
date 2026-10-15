@@ -225,4 +225,11 @@ class MySqlJobQueue implements JobQueue {
         }
         return value.length() <= 2000 ? value : value.substring(0, 2000);
     }
+
+    @Override
+    public int purgeFinishedBefore(Instant cutoff) {
+        return jdbc.sql("DELETE FROM jobs WHERE status IN ('done', 'dead') AND updated_at < :cutoff")
+                .param("cutoff", ZamuTime.toDb(cutoff))
+                .update();
+    }
 }

@@ -27,10 +27,7 @@ class TenantController {
 
     /** Wizard steps built in later milestones (spec: Delivery plan). */
     private static final Map<String, String> LATER_STEPS = Map.of(
-            "calendar", "Milestone 5 (Bookings and reminders)",
-            "services", "Milestone 5 (Bookings and reminders)",
-            "mpesa", "Milestone 6 (M-Pesa payments)",
-            "go-live", "Milestone 4 (Pilot release)");
+            "mpesa", "Milestone 6 (M-Pesa payments)");
 
     private final TenantService tenants;
     private final AdminTenantScope scope;
@@ -108,7 +105,28 @@ class TenantController {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", TenantToneForm.from(tenant));
         }
+        if (!model.containsAttribute("safety")) {
+            model.addAttribute("safety", TenantSafetyForm.from(tenant));
+        }
         return "tenants/setup-tone";
+    }
+
+    @PostMapping("/{tenantId}/setup/tone/safety")
+    String saveSafety(@PathVariable UUID tenantId, @Validated @ModelAttribute("safety") TenantSafetyForm safety,
+            BindingResult errors, Model model, RedirectAttributes redirect) {
+        TenantId id = scope.forPath(tenantId);
+        if (errors.hasErrors()) {
+            TenantView tenant = tenants.get(id);
+            model.addAttribute("tenant", tenant);
+            model.addAttribute("tones", TenantTone.values());
+            model.addAttribute("languages", TenantLanguage.values());
+            model.addAttribute("step", "tone");
+            model.addAttribute("form", TenantToneForm.from(tenant));
+            return "tenants/setup-tone";
+        }
+        tenants.updateSafety(id, safety);
+        redirect.addFlashAttribute("success", "Safety settings saved.");
+        return "redirect:/admin/tenants/" + tenantId + "/setup/tone";
     }
 
     @PostMapping("/{tenantId}/setup/tone")
@@ -120,6 +138,7 @@ class TenantController {
             model.addAttribute("tones", TenantTone.values());
             model.addAttribute("languages", TenantLanguage.values());
             model.addAttribute("step", "tone");
+            model.addAttribute("safety", TenantSafetyForm.from(tenants.get(id)));
             return "tenants/setup-tone";
         }
         tenants.updateTone(id, form);
@@ -128,7 +147,7 @@ class TenantController {
     }
 
     /** Steps that arrive in later milestones show where they will be built. */
-    @GetMapping("/{tenantId}/setup/{step:calendar|services|mpesa|go-live}")
+    @GetMapping("/{tenantId}/setup/{step:calendar|services|mpesa}")
     String laterStep(@PathVariable UUID tenantId, @PathVariable String step, Model model) {
         model.addAttribute("tenant", tenants.get(scope.forPath(tenantId)));
         model.addAttribute("step", step);

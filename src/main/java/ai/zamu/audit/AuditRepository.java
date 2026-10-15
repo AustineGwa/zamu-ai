@@ -1,6 +1,7 @@
 package ai.zamu.audit;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -66,6 +67,41 @@ class AuditRepository {
                 .param("tenantId", tenantId.bytes())
                 .param("limit", limit)
                 .query(ROW_MAPPER)
+                .list();
+    }
+
+    @CrossTenant("Admin audit log search across all tenants (NFR-14); admins only")
+    java.util.List<AuditSearchRow> search(UUID tenantId, String action, java.time.Instant from, java.time.Instant to,
+            int limit) {
+        StringBuilder sql = new StringBuilder("""
+                SELECT a.id, a.tenant_id, t.display_name, u.email, a.action, a.entity, a.entity_id, a.after_state, a.ip,
+                       a.created_at
+                  FROM audit_logs a
+                  LEFT JOIN tenants t ON t.id = a.tenant_id
+                  LEFT JOIN users u ON u.id = a.actor_user_id
+                 WHERE a.created_at >= :from AND a.created_at < :to
+                """);
+        if (tenantId != null) {
+            sql.append(" AND a.tenant_id = :tenantId");
+        }
+        if (action != null && !action.isBlank()) {
+            sql.append(" AND a.action LIKE :action");
+        }
+        sql.append(" ORDER BY a.created_at DESC, a.id DESC LIMIT :limit");
+        var spec = jdbc.sql(sql.toString())
+                .param("from", ZamuTime.toDb(from))
+                .param("to", ZamuTime.toDb(to))
+                .param("limit", limit);
+        if (tenantId != null) {
+            spec = spec.param("tenantId", Uuids.toBytes(tenantId));
+        }
+        if (action != null && !action.isBlank()) {
+            spec = spec.param("action", "%" + action.strip().replace("\\", "\\\\").replace("%", "\\%")
+                    .replace("_", "\\_") + "%");
+        }
+        return spec.query((rs, n) -> new AuditSearchRow(Uuids.read(rs, "id"), Uuids.read(rs, "tenant_id"),
+                rs.getString("display_name"), rs.getString("email"), rs.getString("action"), rs.getString("entity"),
+                Uuids.read(rs, "entity_id"), rs.getString("after_state"), rs.getString("ip"), ZamuTime.read(rs, "created_at")))
                 .list();
     }
 }

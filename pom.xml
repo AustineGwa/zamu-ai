@@ -23,7 +23,21 @@
         <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
         <!-- Set -Dskip.frontend=true to skip the Tailwind build (e.g. when iterating on Java only). -->
         <skip.frontend>false</skip.frontend>
+        <!-- Spring AI 2.0 targets Spring Boot 4.0/4.1 and Spring Framework 7 (built against Boot 4.1.1). -->
+        <spring-ai.version>2.0.1</spring-ai.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Web and views -->
@@ -91,6 +105,20 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+          AI (spec: AI answering; AI-10 provider-agnostic). Spring AI's ChatClient is the only API Zamu calls, so the
+          provider is chosen in configuration: spring.ai.model.chat (anthropic by default, or openai) and
+          spring.ai.model.embedding. Add another Spring AI starter here to offer another provider.
+        -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-anthropic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
         <!-- Tests -->

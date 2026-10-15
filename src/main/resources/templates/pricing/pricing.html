@@ -39,6 +39,39 @@
         </div>
     </section>
 
+    <!-- Who chooses which plan, in pictures. -->
+    <section aria-labelledby="fit-heading" class="bg-paper">
+        <div class="mx-auto max-w-6xl px-4 py-14 md:py-16">
+            <h2 id="fit-heading" class="max-w-2xl font-display text-3xl font-semibold tracking-tight">From one barber's chair to a corporate front desk</h2>
+            <ul class="mt-8 grid gap-6 md:grid-cols-3">
+                <li class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Ato Aikins on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1686671805337-7d8aa64b965f', 'A barber giving a client a haircut', 480, 300, 'aspect-[8/5] w-full object-cover', 'lazy')}">
+                    <div class="p-5">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Starter</p>
+                        <p class="mt-2 text-ink-700">A busy shop, salon or caf&eacute; that lives on WhatsApp and needs every message answered.</p>
+                    </div>
+                </li>
+                <li class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Eben Kassaye on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1643297654416-05795d62e39c', 'A smiling doctor holding a stethoscope', 480, 300, 'aspect-[8/5] w-full object-cover', 'lazy')}">
+                    <div class="p-5">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Growth and Business</p>
+                        <p class="mt-2 text-ink-700">Clinics, schools and multi-staff businesses whose customers call as much as they message.</p>
+                    </div>
+                </li>
+                <li class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Etty Fidele on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1563132337-f159f484226c', 'A professional in an orange blazer', 480, 300, 'aspect-[8/5] w-full object-cover', 'lazy')}">
+                    <div class="p-5">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Enterprise</p>
+                        <p class="mt-2 text-ink-700">Organisations that need Zamu inside their own network, with their own privacy and security rules.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
     <!-- Comparison -->
     <section th:unless="${#lists.isEmpty(catalog.comparison)}" aria-labelledby="compare-heading" class="border-t border-gray-200 bg-paper">
         <div class="mx-auto max-w-7xl px-4 py-14 md:py-20">

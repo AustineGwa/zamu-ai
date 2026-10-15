@@ -15,4 +15,7 @@ public interface JobQueue {
 
     /** Moves a dead job back to queued with a fresh attempt count (admin console, NFR-04). */
     boolean retryDead(UUID jobId);
+
+    /** NFR-11 housekeeping: deletes done and dead jobs last updated before the cutoff. Returns how many. */
+    int purgeFinishedBefore(java.time.Instant cutoff);
 }

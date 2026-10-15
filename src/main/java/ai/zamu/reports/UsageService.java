@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ai.zamu.ai.AiUsageRecorded;
 import ai.zamu.conversations.ConversationEvents;
 import ai.zamu.conversations.MessageDirection;
 import ai.zamu.shared.ids.TenantId;
@@ -35,6 +36,18 @@ public class UsageService {
     public void on(ConversationEvents.MessageRecorded event) {
         repository.increment(event.tenantId(), day(event.at()),
                 event.direction() == MessageDirection.IN ? "messages_in" : "messages_out");
+    }
+
+    /** REP-03: template messages are what Meta bills. */
+    @EventListener
+    public void on(ConversationEvents.TemplateQueued event) {
+        repository.increment(event.tenantId(), day(event.at()), "wa_billable_messages");
+    }
+
+    /** AI-11: tokens and cost per model call. */
+    @EventListener
+    public void on(AiUsageRecorded event) {
+        repository.addAi(event.tenantId(), day(event.at()), event.tokensIn(), event.tokensOut(), event.costUsd());
     }
 
     @Transactional(readOnly = true)

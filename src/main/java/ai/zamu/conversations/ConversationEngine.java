@@ -4,23 +4,30 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import ai.zamu.handovers.HandoverOutcome;
 import ai.zamu.handovers.HandoverReason;
 import ai.zamu.handovers.HandoverService;
 import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.ids.UuidV7;
+import ai.zamu.shared.jobs.JobQueue;
+import ai.zamu.shared.jobs.NewJob;
 import ai.zamu.shared.web.LiveUpdates;
 import ai.zamu.tenants.TenantService;
 import ai.zamu.tenants.TenantView;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The conversation engine (spec: Messaging and the conversation engine): a deterministic state machine that decides
@@ -36,7 +43,9 @@ import ai.zamu.tenants.TenantView;
  *   <li>MSG-10 greeting for a new customer's first conversation.</li>
  *   <li>MSG-13 non-text; MSG-19 "stop"; MSG-18 "person"; greeting only; otherwise the answer step.</li>
  * </ol>
- * Runs in one job per message, one at a time per customer (MSG-05, job lock key).
+ * Runs in one job per message, one at a time per customer (MSG-05, job lock key). The AI step runs outside any
+ * database transaction (it can take seconds); its result is applied in a second, short transaction, and dropped if
+ * staff took the chat over in the meantime.
  */
 @Component
 class ConversationEngine {
@@ -44,6 +53,17 @@ class ConversationEngine {
     private static final Logger log = LoggerFactory.getLogger(ConversationEngine.class);
 
     enum Result { PROCESSED, DUPLICATE }
+
+    static final String EMERGENCY_ALERT_JOB = "emergency_alert";
+    static final int HISTORY_MESSAGES = 12;
+
+    /** What the first transaction decided: done, or ask the AI step this question. */
+    private record Step(Result result, AnswerProvider.Question question, UUID conversationId, String language) {
+
+        static Step done(Result result) {
+            return new Step(result, null, null, null);
+        }
+    }
 
     private final CustomerRepository customers;
     private final ConversationRepository conversations;
@@ -54,11 +74,15 @@ class ConversationEngine {
     private final AnswerProvider answers;
     private final LiveUpdates live;
     private final ApplicationEventPublisher events;
+    private final TransactionTemplate tx;
+    private final JobQueue jobs;
+    private final ObjectMapper objectMapper;
     private final Clock clock;
 
     ConversationEngine(CustomerRepository customers, ConversationRepository conversations, MessageRepository messages,
             Outbox outbox, TenantService tenants, HandoverService handovers, AnswerProvider answers, LiveUpdates live,
-            ApplicationEventPublisher events, Clock clock) {
+            ApplicationEventPublisher events, TransactionTemplate tx, JobQueue jobs, ObjectMapper objectMapper,
+            Clock clock) {
         this.customers = customers;
         this.conversations = conversations;
         this.messages = messages;
@@ -68,14 +92,35 @@ class ConversationEngine {
         this.answers = answers;
         this.live = live;
         this.events = events;
+        this.tx = tx;
+        this.jobs = jobs;
+        this.objectMapper = objectMapper;
         this.clock = clock;
     }
 
-    @Transactional
     public Result handle(InboundMessage in) {
+        Step step = tx.execute(s -> receive(in));
+        if (step.question() == null) {
+            return step.result();
+        }
+        AnswerProvider.Answer answer;
+        try {
+            answer = answers.answer(step.question());
+        } catch (RuntimeException e) {
+            // The message is already stored, so a retry would skip it as a duplicate: hand over instead (HO-01).
+            log.error("AI step failed for conversation {} ({})", step.conversationId(), e.getClass().getSimpleName());
+            answer = AnswerProvider.Answer.handover(HandoverReason.ERROR);
+        }
+        AnswerProvider.Answer decided = answer;
+        tx.executeWithoutResult(s -> apply(step, decided));
+        return Result.PROCESSED;
+    }
+
+    /** First transaction: store the message and handle everything that needs no AI. */
+    private Step receive(InboundMessage in) {
         TenantId tenantId = in.tenantId();
         if (in.externalId() != null && messages.existsByWaMessageId(tenantId, in.externalId())) {
-            return Result.DUPLICATE; // MSG-02
+            return Step.done(Result.DUPLICATE); // MSG-02
         }
         Instant now = clock.instant();
         TenantView tenant = tenants.get(tenantId);
@@ -115,7 +160,8 @@ class ConversationEngine {
         }
 
         // Store the message; MSG-14 window runs 24 hours from this message
-        messages.insert(tenantId, new Message(UuidV7.next(clock), tenantId.value(), conversation.id(),
+        UUID inboundId = UuidV7.next(clock);
+        messages.insert(tenantId, new Message(inboundId, tenantId.value(), conversation.id(),
                 MessageDirection.IN, MessageSender.CUSTOMER, null, in.externalId(), in.type(), in.text(),
                 in.mediaRef(), null, MessageStatus.RECEIVED, null, now, now));
         conversations.recordCustomerMessage(tenantId, conversation.id(), now);
@@ -125,10 +171,10 @@ class ConversationEngine {
         live.publish(tenantId, "inbox", conversation.id().toString());
 
         if (customer.blocked() || customer.deletedAt() != null) {
-            return Result.PROCESSED;
+            return Step.done(Result.PROCESSED);
         }
         if (conversation.status() == ConversationStatus.HANDED_OVER) {
-            return Result.PROCESSED; // MSG-08: staff have it; never reply as the bot
+            return Step.done(Result.PROCESSED); // MSG-08: staff have it; never reply as the bot
         }
 
         String language = language(tenantId, customer, in.text(), tenant);
@@ -141,7 +187,7 @@ class ConversationEngine {
                 conversations.markHoldingReplySent(tenantId, conversation.id());
             }
             handOver(tenantId, conversation, HandoverReason.STAFF_ONLY, language, false);
-            return Result.PROCESSED;
+            return Step.done(Result.PROCESSED);
         }
 
         // MSG-10: greeting at the start of a new customer's first conversation (Appendix B: "first message to a new customer")
@@ -154,32 +200,115 @@ class ConversationEngine {
 
         if (in.type() == MessageType.MEDIA) {
             outbox.text(tenantId, conversation, MessageSender.BOT, null, StandardMessages.nonText(language)); // MSG-13
-            return Result.PROCESSED;
+            return Step.done(Result.PROCESSED);
         }
         String text = in.text() == null ? "" : in.text();
         if (Keywords.isStop(text)) {
             customers.optOut(tenantId, customer.id(), now); // MSG-19
             outbox.text(tenantId, conversation, MessageSender.BOT, null, StandardMessages.optedOut(language));
-            return Result.PROCESSED;
+            return Step.done(Result.PROCESSED);
         }
         if (Keywords.asksForPerson(text)) {
             handOver(tenantId, conversation, HandoverReason.REQUESTED, language, true); // MSG-18
-            return Result.PROCESSED;
+            return Step.done(Result.PROCESSED);
         }
         if (greeted && Keywords.isGreetingOnly(text)) {
-            return Result.PROCESSED; // the greeting is the reply
+            return Step.done(Result.PROCESSED); // the greeting is the reply
         }
 
-        AnswerProvider.Answer answer = answers.answer(new AnswerProvider.Question(tenantId, conversation.id(),
-                customer.id(), text, language));
-        if (answer.text() != null && !answer.text().isBlank()) {
-            outbox.text(tenantId, conversation, MessageSender.BOT, null, answer.text());
+        return new Step(Result.PROCESSED, new AnswerProvider.Question(tenantId, conversation.id(), customer.id(), text,
+                language, history(tenantId, conversation.id(), inboundId),
+                in.replyId() != null ? in.replyId() : numberedChoice(tenantId, conversation.id(), text),
+                customer.phone(), customer.name()), conversation.id(), language);
+    }
+
+    /**
+     * A customer who types "2" instead of tapping the second option means that option: the latest message from
+     * Zamu must be a list or buttons (BK-03). ASSUMPTION: also how typed replies to "Reply 1 to reschedule or 2 to
+     * cancel" work, since the confirmation is sent with those two buttons.
+     */
+    private String numberedChoice(TenantId tenantId, UUID conversationId, String text) {
+        String t = text.strip();
+        if (!t.matches("\\d{1,2}")) {
+            return null;
         }
-        if (answer.handover() != null) {
-            // The answer already says it is connecting the customer; add only the after-hours notice if needed.
-            handOver(tenantId, conversation, answer.handover(), language, false);
+        int n = Integer.parseInt(t);
+        List<Message> recent = messages.findRecent(tenantId, conversationId, 4);
+        for (int i = recent.size() - 1; i >= 0; i--) {
+            Message m = recent.get(i);
+            if (m.direction() != MessageDirection.OUT) {
+                continue;
+            }
+            if (m.type() != MessageType.INTERACTIVE || m.templateJson() == null) {
+                return null;
+            }
+            Interactive options = outbox.parseOptions(m.templateJson());
+            return n >= 1 && n <= options.choices().size() ? options.choices().get(n - 1).id() : null;
         }
-        return Result.PROCESSED;
+        return null;
+    }
+
+    /** Second transaction: send what the AI step decided, unless staff have taken the chat meanwhile (MSG-08). */
+    private void apply(Step step, AnswerProvider.Answer answer) {
+        TenantId tenantId = step.question().tenantId();
+        Conversation conversation = conversations.findById(tenantId, step.conversationId()).orElse(null);
+        if (conversation == null || conversation.status() != ConversationStatus.BOT) {
+            log.info("Conversation {} changed while Zamu was answering; reply dropped", step.conversationId());
+            return;
+        }
+        String language = step.language();
+        switch (answer.kind()) {
+            case REPLY -> {
+                if (answer.options() != null) {
+                    outbox.interactive(tenantId, conversation, answer.text(), answer.options()); // BK-03
+                    return;
+                }
+                UUID messageId = outbox.text(tenantId, conversation, MessageSender.BOT, null, answer.text());
+                messages.updateAiMeta(tenantId, messageId, answer.confidence(),
+                        answer.entryIds().isEmpty() ? null : objectMapper.writeValueAsString(answer.entryIds()));
+            }
+            case NOT_SURE -> {
+                UUID messageId = outbox.text(tenantId, conversation, MessageSender.BOT, null,
+                        StandardMessages.notSure(language)); // AI-03
+                messages.updateAiMeta(tenantId, messageId, answer.confidence(), null);
+                handOver(tenantId, conversation, HandoverReason.LOW_CONFIDENCE, language, false);
+            }
+            case EMERGENCY -> {
+                TenantView tenant = tenants.get(tenantId);
+                outbox.text(tenantId, conversation, MessageSender.BOT, null,
+                        StandardMessages.emergency(language, tenant.emergencyNumber())); // AI-04
+                handovers.request(tenantId, conversation.id(), HandoverReason.SENSITIVE);
+                conversations.updateStatus(tenantId, conversation.id(), ConversationStatus.HANDED_OVER, null,
+                        clock.instant());
+                // NOT-02: the owners hear at once, by email for now (no health details: NFR-11).
+                jobs.enqueue(NewJob.of(EMERGENCY_ALERT_JOB, tenantId,
+                        Map.of("conversationId", conversation.id().toString())));
+            }
+            case HANDOVER -> {
+                if (answer.text() != null && !answer.text().isBlank()) {
+                    outbox.text(tenantId, conversation, MessageSender.BOT, null, answer.text());
+                }
+                handOver(tenantId, conversation, answer.handover(), language, true);
+            }
+        }
+    }
+
+    /** The last messages before the question, for the AI step's context (spec: "the last 12 messages"). */
+    private List<AnswerProvider.Turn> history(TenantId tenantId, UUID conversationId, UUID questionId) {
+        List<Message> recent = messages.findRecent(tenantId, conversationId, HISTORY_MESSAGES + 3);
+        List<AnswerProvider.Turn> turns = new ArrayList<>();
+        for (Message m : recent) {
+            if (m.id().equals(questionId) || m.body() == null || m.body().isBlank()) {
+                continue;
+            }
+            String role = switch (m.sender()) {
+                case CUSTOMER -> "customer";
+                case STAFF -> "staff";
+                case BOT, SYSTEM -> "zamu";
+            };
+            turns.add(new AnswerProvider.Turn(role, m.body()));
+        }
+        return turns.size() > HISTORY_MESSAGES ? turns.subList(turns.size() - HISTORY_MESSAGES, turns.size()) : turns;
     }
 
     /**

@@ -55,6 +55,23 @@ final class StandardMessages {
                 + ". Leave your message here and we'll get back to you.";
     }
 
+    /** ASSUMPTION: Kenya's national emergency numbers, used when the business hasn't set its own. */
+    static final String DEFAULT_EMERGENCY_NUMBER = "999 or 112";
+
+    /**
+     * AI-04, Appendix B emergency wording. ASSUMPTION: the Swahili version is a translation awaiting a native
+     * speaker's review.
+     */
+    static String emergency(String language, String emergencyNumber) {
+        String number = emergencyNumber == null || emergencyNumber.isBlank() ? DEFAULT_EMERGENCY_NUMBER
+                : emergencyNumber.strip();
+        return swahili(language)
+                ? "Kama hii ni dharura, tafadhali piga " + number + " au nenda hospitali iliyo karibu sasa hivi. "
+                        + "Ninaijulisha timu yetu pia."
+                : "If this is an emergency, please call " + number + " or go to the nearest hospital now. "
+                        + "I'm alerting our team as well.";
+    }
+
     /** AI-03 wording. */
     static String notSure(String language) {
         return swahili(language)

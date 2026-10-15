@@ -37,9 +37,18 @@
                 <a th:href="@{/admin/tenants}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Tenants</a>
                 <a th:href="@{/admin/leads}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Sign-ups</a>
                 <a th:href="@{/admin/pricing}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Pricing</a>
+                <a th:href="@{/admin/review}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Review</a>
+                <a th:href="@{/admin/change-requests}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Requests</a>
+                <a th:href="@{/admin/health}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Health</a>
+                <a th:if="${currentUser.admin}" th:href="@{/admin/usage}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Usage</a>
+                <a th:if="${currentUser.admin}" th:href="@{/admin/audit}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Audit log</a>
             </th:block>
             <th:block th:unless="${currentUser.platformStaff}">
                 <a th:href="@{/app/inbox}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Inbox</a>
+                <a th:href="@{/app/today}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Today</a>
+                <a th:href="@{/app/bookings}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Bookings</a>
+                <a th:href="@{/app/knowledge}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Knowledge</a>
+                <a th:if="${currentUser.owner}" th:href="@{/app/reports}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Reports</a>
                 <a th:if="${currentUser.owner}" th:href="@{/app/users}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Staff</a>
                 <a th:if="${currentUser.owner}" th:href="@{/app/settings}" class="rounded-md px-3 py-2 font-medium hover:bg-gray-100">Settings</a>
                 <button type="button" data-alerts-toggle hidden

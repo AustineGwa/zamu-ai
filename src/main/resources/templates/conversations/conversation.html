@@ -30,6 +30,19 @@
 
     <div class="mt-4" th:insert="~{fragments/forms :: flash}"></div>
 
+    <!-- Customer panel: their bookings (spec: Conversation screen). -->
+    <section th:if="${customerBookings != null and !#lists.isEmpty(customerBookings)}" class="card mt-4" aria-labelledby="bookings-heading">
+        <h2 id="bookings-heading" class="text-sm font-semibold uppercase tracking-wider text-ink-600">Bookings</h2>
+        <ul class="mt-2 space-y-1 text-sm">
+            <li th:each="b : ${customerBookings}" class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold" th:text="${#temporals.format(b.startsAt().atZone(zone), 'EEE d MMM, HH:mm')}">Sat 18 Oct, 09:30</span>
+                <span th:text="${b.serviceName()}">Check-up</span>
+                <span class="badge bg-gray-100 text-ink-700" th:text="${b.status().label()}">Confirmed</span>
+            </li>
+        </ul>
+        <a th:href="@{/app/bookings}" class="link mt-2 inline-block text-sm">All bookings</a>
+    </section>
+
     <!-- Handover (HO-05): accept, hand back to Zamu, close. -->
     <section class="card mt-4" aria-labelledby="handover-heading">
         <h2 id="handover-heading" class="sr-only">Who is handling this chat</h2>

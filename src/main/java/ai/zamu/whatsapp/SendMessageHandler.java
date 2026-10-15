@@ -78,10 +78,15 @@ class SendMessageHandler implements JobHandler {
             return;
         }
         try {
-            String waMessageId = template
-                    ? api.sendTemplate(credentials, message.toPhone(), message.template().name(),
-                            message.template().language(), message.template().params())
-                    : api.sendText(credentials, message.toPhone(), message.body());
+            String waMessageId;
+            if (template) {
+                waMessageId = api.sendTemplate(credentials, message.toPhone(), message.template().name(),
+                        message.template().language(), message.template().params());
+            } else if (message.type() == MessageType.INTERACTIVE && message.options() != null) {
+                waMessageId = api.sendInteractive(credentials, message.toPhone(), message.body(), message.options());
+            } else {
+                waMessageId = api.sendText(credentials, message.toPhone(), message.body());
+            }
             conversations.markSent(tenantId, messageId, waMessageId);
         } catch (WhatsAppApiException e) {
             if (PERMANENT.contains(e.code()) || job.isLastAttempt()) {

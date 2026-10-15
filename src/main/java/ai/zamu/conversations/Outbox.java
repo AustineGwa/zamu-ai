@@ -53,6 +53,21 @@ class Outbox {
                 objectMapper.writeValueAsString(template));
     }
 
+    /** A template Zamu sends itself, such as the booking reminder (BK-11). */
+    UUID botTemplate(TenantId tenantId, Conversation conversation, TemplateRef template, String renderedBody) {
+        return queue(tenantId, conversation, MessageSender.BOT, null, MessageType.TEMPLATE, renderedBody,
+                objectMapper.writeValueAsString(template));
+    }
+
+    /**
+     * Options to tap (BK-03). The options are stored with the message (in template_json, which holds the
+     * channel payload for non-text messages) and the body lists them as text for the inbox and other channels.
+     */
+    UUID interactive(TenantId tenantId, Conversation conversation, String text, Interactive options) {
+        return queue(tenantId, conversation, MessageSender.BOT, null, MessageType.INTERACTIVE, text,
+                objectMapper.writeValueAsString(options));
+    }
+
     private UUID queue(TenantId tenantId, Conversation conversation, MessageSender sender, UUID userId,
             MessageType type, String body, String templateJson) {
         Instant now = clock.instant();
@@ -65,9 +80,16 @@ class Outbox {
                     .lockKey("out:" + conversation.id()));
         }
         events.publishEvent(new ConversationEvents.MessageRecorded(tenantId, MessageDirection.OUT, now));
+        if (type == MessageType.TEMPLATE && conversation.channel() == Channel.WHATSAPP) {
+            events.publishEvent(new ConversationEvents.TemplateQueued(tenantId, now));
+        }
         live.publish(tenantId, "conversation-" + conversation.id(), id.toString());
         live.publish(tenantId, "inbox", conversation.id().toString());
         return id;
+    }
+
+    Interactive parseOptions(String json) {
+        return json == null ? null : objectMapper.readValue(json, Interactive.class);
     }
 
     TemplateRef parseTemplate(String json) {

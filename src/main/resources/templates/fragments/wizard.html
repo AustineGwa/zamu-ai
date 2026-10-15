@@ -15,15 +15,18 @@
         </p>
     </div>
     <nav aria-label="Setup steps" class="-mx-4 overflow-x-auto px-4">
+        <!-- key | label | path under /admin/tenants/{id}. Later-milestone steps say where they will be built. -->
         <ol class="flex min-w-max gap-1 text-sm"
-            th:with="steps=${ {'profile','whatsapp','mpesa','calendar','services','hours','tone','staff','go-live'} },
-                     labels=${ {'Profile','WhatsApp','M-Pesa','Calendar','Services','Hours','Tone','Staff','Go-live'} }">
-            <li th:each="s, iter : ${steps}">
-                <a th:href="@{/admin/tenants/{id}/setup/{s}(id=${tenant.id}, s=${s})}"
-                   th:attr="aria-current=${s == step} ? 'step' : null"
-                   th:classappend="${s == step} ? 'bg-brand-700 text-white' : 'bg-white text-ink-900 hover:bg-gray-100'"
+            th:with="steps=${ {'profile|Profile|setup/profile', 'whatsapp|WhatsApp|setup/whatsapp', 'hours|Hours|setup/hours',
+                               'services|Services|setup/services', 'calendar|Calendar|setup/calendar', 'mpesa|M-Pesa|setup/mpesa',
+                               'tone|Tone and safety|setup/tone', 'kb|Knowledge|kb', 'eval|Tests|eval', 'staff|Staff|setup/staff',
+                               'go-live|Go-live|setup/go-live', 'privacy|Privacy and data|privacy'} }">
+            <li th:each="entry, iter : ${steps}" th:with="parts=${#strings.arraySplit(entry, '|')}">
+                <a th:href="@{'/admin/tenants/' + ${tenant.id} + '/' + ${parts[2]}}"
+                   th:attr="aria-current=${parts[0] == step} ? 'step' : null"
+                   th:classappend="${parts[0] == step} ? 'bg-brand-700 text-white' : 'bg-white text-ink-900 hover:bg-gray-100'"
                    class="block rounded-md border border-gray-200 px-3 py-2 font-medium">
-                    <span th:text="${iter.count} + '. ' + ${labels[iter.index]}">1. Profile</span>
+                    <span th:text="${iter.count} + '. ' + ${parts[1]}">1. Profile</span>
                 </a>
             </li>
         </ol>

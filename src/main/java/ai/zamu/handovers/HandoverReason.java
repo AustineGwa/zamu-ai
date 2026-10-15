@@ -3,8 +3,10 @@ package ai.zamu.handovers;
 import java.util.Locale;
 
 /**
- * Why a conversation went to staff (spec: handovers.reason). STAFF_ONLY and STAFF_INITIATED are additions
- * (ASSUMPTION): the business switched on staff-only mode, or a staff member replied to a chat Zamu was handling.
+ * Why a conversation went to staff (spec: handovers.reason). Additions (ASSUMPTION): STAFF_ONLY (staff-only mode),
+ * STAFF_INITIATED (a staff member replied to a chat Zamu was handling), TOPIC (a topic the business always handles
+ * in person, HO-01), BOOKING (booking or payment requests until Milestones 5 and 6), LIMIT (too many messages,
+ * MSG-16).
  */
 public enum HandoverReason {
     REQUESTED("Customer asked for a person"),
@@ -13,7 +15,10 @@ public enum HandoverReason {
     PAYMENT_ISSUE("Payment problem"),
     ERROR("Something went wrong"),
     STAFF_ONLY("Staff-only mode"),
-    STAFF_INITIATED("Staff took over");
+    STAFF_INITIATED("Staff took over"),
+    TOPIC("Topic the business handles in person"),
+    BOOKING("Wants to book or pay"),
+    LIMIT("Too many messages");
 
     private final String label;
 

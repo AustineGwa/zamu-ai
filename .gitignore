@@ -9,3 +9,5 @@ src/main/frontend/node_modules/
 src/main/resources/static/css/app.css
 # Downloaded by the Maven wrapper
 .mvn/wrapper/maven-wrapper.jar
+# Copies of the project delivered as zips
+Claude outputs/

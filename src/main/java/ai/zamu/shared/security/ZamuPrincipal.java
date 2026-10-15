@@ -44,6 +44,11 @@ public record ZamuPrincipal(UUID userId, TenantId tenantId, ZamuRole role, Strin
         return role.isPlatformStaff();
     }
 
+    /** Zamu admin (usage and billing, audit log), not an operator. */
+    public boolean isAdmin() {
+        return role == ZamuRole.ADMIN;
+    }
+
     public boolean isOwner() {
         return role == ZamuRole.OWNER;
     }

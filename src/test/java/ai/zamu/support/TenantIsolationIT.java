@@ -38,6 +38,18 @@ class TenantIsolationIT extends AbstractMySqlIT {
     MockMvc mvc;
 
     @Autowired
+    ai.zamu.knowledge.KnowledgeService knowledge;
+
+    @Autowired
+    ai.zamu.bookings.BusinessHoursService hours;
+
+    @Autowired
+    ai.zamu.bookings.BookingSetupService bookingSetup;
+
+    @Autowired
+    ai.zamu.bookings.BookingService bookingService;
+
+    @Autowired
     TenantService tenants;
 
     @Autowired
@@ -171,5 +183,59 @@ class TenantIsolationIT extends AbstractMySqlIT {
                 MessageType.TEXT, "Hello", null, clock.instant()));
         return jdbc.sql("SELECT id FROM conversations WHERE tenant_id = ?").param(tenantId.bytes())
                 .query((rs, n) -> Uuids.read(rs, "id")).single();
+    }
+
+    @Test
+    void NFR_09_ownersCannotReachTheKnowledgeTestOrGoLiveConsoles() throws Exception {
+        for (String path : new String[] {"/admin/tenants/{id}/kb", "/admin/tenants/{id}/eval",
+                "/admin/tenants/{id}/setup/go-live"}) {
+            mvc.perform(get(path, fx.tenantA().id()).with(as(fx.ownerA(), fx.tenantA()))).andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void NFR_09_ownersSeeOnlyTheirOwnKnowledge() throws Exception {
+        UUID entry = knowledge.create(fx.idB(), new ai.zamu.knowledge.KbEntryForm("Braids", "How much are braids?",
+                "Braids cost KES 3,000.", null, null), fx.ownerB().id());
+        knowledge.approve(fx.idB(), entry, fx.ownerB().id());
+
+        mvc.perform(get("/app/knowledge").with(as(fx.ownerA(), fx.tenantA())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Braids"))));
+        mvc.perform(get("/app/knowledge").with(as(fx.ownerB(), fx.tenantB())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Braids")));
+    }
+
+    @Test
+    void NFR_09_staffCannotSeeOrChangeAnotherTenantsBookings() throws Exception {
+        ai.zamu.shared.ids.TenantId b = fx.idB();
+        java.util.List<ai.zamu.bookings.DayHours> week = new java.util.ArrayList<>();
+        for (java.time.DayOfWeek d : java.time.DayOfWeek.values()) {
+            week.add(new ai.zamu.bookings.DayHours(d, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0), null, null));
+        }
+        hours.saveWeek(b, week);
+        UUID service = bookingSetup.createService(b, new ai.zamu.bookings.ServiceForm("Braids", null, null, 60, null,
+                null, java.math.BigDecimal.ZERO, 0, true, java.util.List.of()));
+        ai.zamu.bookings.Booking booking = bookingService.hold(b, new ai.zamu.bookings.BookingService.HoldRequest(
+                UUID.randomUUID(), "Neema", "254711000222", null, service, null,
+                java.time.Instant.parse("2026-10-15T08:00:00Z"), "staff", null));
+
+        mvc.perform(get("/app/bookings").with(as(fx.ownerA(), fx.tenantA())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Neema"))));
+        mvc.perform(post("/app/bookings/{id}/cancel", booking.id()).with(csrf()).with(as(fx.staffA(), fx.tenantA())))
+                .andExpect(status().isNotFound());
+        assertThat(bookingService.get(b, booking.id()).status()).isEqualTo(ai.zamu.bookings.BookingStatus.CONFIRMED);
+        mvc.perform(get("/app/bookings").with(as(fx.ownerB(), fx.tenantB())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Neema")));
+        mvc.perform(get("/app/today").with(as(fx.staffB(), fx.tenantB()))).andExpect(status().isOk());
+        mvc.perform(get("/app/bookings/new").with(as(fx.staffB(), fx.tenantB())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Braids")));
+        mvc.perform(get("/app/bookings/slots").param("serviceId", service.toString()).param("date", "2026-10-15")
+                        .with(as(fx.staffB(), fx.tenantB())))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Free times")));
+        mvc.perform(get("/app/bookings/slots").param("serviceId", service.toString()).param("date", "2026-10-15")
+                        .with(as(fx.staffA(), fx.tenantA())))
+                .andExpect(status().isNotFound());
     }
 }

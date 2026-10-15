@@ -51,8 +51,11 @@ public abstract class AbstractMySqlIT {
     @BeforeEach
     void resetDatabaseAndClock() {
         for (String table : new String[] {"audit_logs", "login_codes", "jobs", "leads", "SPRING_SESSION_ATTRIBUTES",
-                "SPRING_SESSION", "usage_daily", "handovers", "messages", "conversations", "customers", "wa_templates",
-                "whatsapp_accounts", "business_hours", "webhook_events", "users", "tenants"}) {
+                "SPRING_SESSION", "usage_daily", "bookings", "service_resources", "services", "resources", "holidays",
+                "booking_settings", "calendar_connections", "eval_results", "eval_runs", "eval_cases", "kb_chunks",
+                "kb_entries", "handovers", "messages", "conversations", "customers", "wa_templates",
+                "whatsapp_accounts", "business_hours", "webhook_events", "change_requests", "report_deliveries",
+                "retention_settings", "users", "tenants"}) {
             jdbc.sql("DELETE FROM " + table).update();
         }
         clock.set(TestSupportConfig.START);

@@ -123,4 +123,23 @@ public class HandoverService {
     public int openCount(TenantId tenantId) {
         return repository.countOpen(tenantId);
     }
+
+    /** NFR-11, NFR-12: removes the handovers of these conversations (privacy deletion and retention). */
+    @Transactional
+    public int deleteForConversations(TenantId tenantId, java.util.List<UUID> conversationIds) {
+        return repository.deleteForConversations(tenantId, conversationIds);
+    }
+
+    /** NFR-12: the handovers of these conversations, for a customer's data export. */
+    @Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String, Object>> exportForConversations(TenantId tenantId,
+            java.util.List<UUID> conversationIds) {
+        return repository.exportForConversations(tenantId, conversationIds);
+    }
+
+    /** NFR-11: offboarding purge. */
+    @Transactional
+    public int deleteAllForTenant(TenantId tenantId) {
+        return repository.deleteAllForTenant(tenantId);
+    }
 }

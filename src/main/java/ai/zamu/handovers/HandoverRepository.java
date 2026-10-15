@@ -137,4 +137,45 @@ class HandoverRepository {
                 .param("now", ZamuTime.toDb(now))
                 .update() == 1;
     }
+
+    // --- privacy (NFR-11, NFR-12) ---
+
+    int deleteForConversations(TenantId tenantId, java.util.List<UUID> conversationIds) {
+        int deleted = 0;
+        for (UUID id : conversationIds) {
+            deleted += jdbc.sql("DELETE FROM handovers WHERE tenant_id = :tenantId AND conversation_id = :conversationId")
+                    .param("tenantId", tenantId.bytes())
+                    .param("conversationId", ai.zamu.shared.ids.Uuids.toBytes(id))
+                    .update();
+        }
+        return deleted;
+    }
+
+    java.util.List<java.util.Map<String, Object>> exportForConversations(TenantId tenantId, java.util.List<UUID> conversationIds) {
+        java.util.List<java.util.Map<String, Object>> out = new java.util.ArrayList<>();
+        for (UUID id : conversationIds) {
+            jdbc.sql("""
+                    SELECT conversation_id, reason, requested_at, accepted_at, resolved_at FROM handovers
+                     WHERE tenant_id = :tenantId AND conversation_id = :conversationId ORDER BY requested_at
+                    """)
+                    .param("tenantId", tenantId.bytes())
+                    .param("conversationId", ai.zamu.shared.ids.Uuids.toBytes(id))
+                    .query((rs, n) -> {
+                        java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+                        row.put("conversation_id", ai.zamu.shared.ids.Uuids.read(rs, "conversation_id").toString());
+                        row.put("reason", rs.getString("reason"));
+                        row.put("requested_at", String.valueOf(ai.zamu.shared.time.ZamuTime.read(rs, "requested_at")));
+                        row.put("accepted_at", String.valueOf(ai.zamu.shared.time.ZamuTime.read(rs, "accepted_at")));
+                        row.put("resolved_at", String.valueOf(ai.zamu.shared.time.ZamuTime.read(rs, "resolved_at")));
+                        return row;
+                    })
+                    .list()
+                    .forEach(out::add);
+        }
+        return out;
+    }
+
+    int deleteAllForTenant(TenantId tenantId) {
+        return jdbc.sql("DELETE FROM handovers WHERE tenant_id = :tenantId").param("tenantId", tenantId.bytes()).update();
+    }
 }

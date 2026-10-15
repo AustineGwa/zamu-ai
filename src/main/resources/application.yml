@@ -38,6 +38,38 @@ spring:
       cache:
         cachecontrol:
           max-age: 365d
+  ai:
+    # AI-10: which Spring AI provider answers is configuration only. Chat: anthropic (default) or openai.
+    # Embeddings: none (keyword search only), openai, or another Spring AI provider with its starter in pom.xml.
+    # Anthropic has no embedding model, so semantic search needs a second provider (OPENAI_API_KEY).
+    model:
+      chat: ${ZAMU_AI_CHAT_PROVIDER:anthropic}
+      embedding: ${ZAMU_AI_EMBEDDING_PROVIDER:none}
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
+    chat:
+      client:
+        # Zamu builds its own ChatClient per provider (ai.SpringAiClient).
+        enabled: false
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      timeout: 10s
+      max-retries: 1
+      chat:
+        model: ${ZAMU_AI_MODEL_SMALL:claude-haiku-5-5}
+        max-tokens: 800
+        temperature: 0.2
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      timeout: 10s
+      max-retries: 1
+      chat:
+        model: ${ZAMU_AI_MODEL_SMALL:gpt-5-mini}
+      embedding:
+        model: ${ZAMU_AI_EMBEDDING_MODEL:text-embedding-3-small}
   datasource:
     hikari:
       # Small instances (Render's 512 MB) don't need more; raise with ZAMU_DB_POOL_SIZE on bigger ones.
@@ -93,9 +125,36 @@ zamu:
     admin-name: ${ZAMU_BOOTSTRAP_ADMIN_NAME:Zamu Admin}
   local-demo:
     enabled: false
+  ai:
+    # AI-09: a small model answers; the large one is tried once when the small one's reply fails validation.
+    # Model names belong to the chosen provider: change both when switching provider.
+    model-small: ${ZAMU_AI_MODEL_SMALL:claude-haiku-5-5}
+    model-large: ${ZAMU_AI_MODEL_LARGE:claude-sonnet-5-5}
+    # AI-10: give up on a provider after this long (then the backup, if any, then a handover).
+    timeout: 10s
+    # Bean-name prefix of a second chat provider to use on errors, e.g. "openAi". Empty means none. Both providers
+    # must then be active: remove spring.ai.model.chat and set both API keys.
+    backup-provider: ${ZAMU_AI_BACKUP_PROVIDER:}
+    # MSG-16 (ASSUMPTION): above this many AI replies to one customer in an hour, Zamu hands the chat to staff.
+    max-replies-per-customer-hour: 30
+    # AI-11: USD per million tokens, per model, for the cost column in usage_daily. Fill in from the provider's
+    # current price list; unknown models are counted at 0.
+    prices: {}
   leads:
     # Where website sign-ups are emailed. Empty means no email (they still appear under Sign-ups in the console).
     notify-email: ""
+  billing:
+    # REP-03, REP-04, NFR-19: running-cost estimate. ASSUMPTION: placeholders; set today's rate and Meta's Kenya
+    # price for the template categories you send.
+    usd-to-kes: ${ZAMU_BILLING_USD_TO_KES:129.00}
+    whatsapp-message-usd: ${ZAMU_BILLING_WHATSAPP_MESSAGE_USD:0.0100}
+    alert-share: 0.40
+  google:
+    # BK-01: one Google Cloud OAuth client (Web application) for every tenant's calendar. Register the redirect
+    # URI {base-url}/admin/calendar/callback on it. Leave blank to book from opening hours and Zamu's bookings only.
+    client-id: ${ZAMU_GOOGLE_CLIENT_ID:}
+    client-secret: ${ZAMU_GOOGLE_CLIENT_SECRET:}
+    timeout: 8s
   whatsapp:
     # WhatsApp Cloud API. The Graph version is pinned: confirm it is still supported before go-live and plan upgrades.
     graph-base-url: https://graph.facebook.com
@@ -124,6 +183,11 @@ spring:
   flyway:
     # H2MigrationsMirrorTest fails the build if a MySQL migration has no H2 twin.
     locations: classpath:db/migration-h2
+  ai:
+    model:
+      # No API key needed locally: the offline stand-in answers from the knowledge base (ai.OfflineAiClient).
+      # Set ZAMU_AI_CHAT_PROVIDER=anthropic and ANTHROPIC_API_KEY to try the real model.
+      chat: ${ZAMU_AI_CHAT_PROVIDER:none}
   thymeleaf:
     cache: false
   web:
@@ -206,6 +270,11 @@ spring:
   config:
     activate:
       on-profile: test
+  ai:
+    model:
+      # Tests replace the AI with a scripted stand-in (no network).
+      chat: none
+      embedding: none
 server:
   servlet:
     session:

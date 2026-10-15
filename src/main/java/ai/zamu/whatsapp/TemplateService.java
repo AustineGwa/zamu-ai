@@ -119,4 +119,10 @@ public class TemplateService implements TemplateCatalog {
     private static String blankToNull(String s) {
         return s == null || s.isBlank() ? null : s.trim();
     }
+
+    /** NFR-11: offboarding purge. */
+    @Transactional
+    public void purgeTenant(TenantId tenantId) {
+        repository.deleteAllForTenant(tenantId);
+    }
 }

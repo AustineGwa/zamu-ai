@@ -1,6 +1,7 @@
 package ai.zamu.conversations;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +78,19 @@ public class ConversationService {
                 .flatMap(m -> conversations.findById(tenantId, m.conversationId()).flatMap(c ->
                         customers.findById(tenantId, c.customerId()).map(cu -> new OutboundMessage(m.id(),
                                 c.id(), c.channel(), cu.phone(), m.type(), m.body(),
-                                outbox.parseTemplate(m.templateJson()), m.status(), c.windowOpen(clock.instant())))));
+                                m.type() == MessageType.INTERACTIVE ? null : outbox.parseTemplate(m.templateJson()),
+                                m.status(), c.windowOpen(clock.instant()),
+                                m.type() == MessageType.INTERACTIVE ? outbox.parseOptions(m.templateJson()) : null))));
+    }
+
+    /** For the local WhatsApp simulator: the options in Zamu's latest message to this number, if it has any. */
+    @Transactional(readOnly = true)
+    public Optional<Interactive> latestOptions(TenantId tenantId, String phone) {
+        return customers.findByPhone(tenantId, phone)
+                .flatMap(cu -> conversations.findLatest(tenantId, cu.id(), Channel.WHATSAPP))
+                .flatMap(c -> messages.findRecent(tenantId, c.id(), 1).stream().findFirst())
+                .filter(m -> m.direction() == MessageDirection.OUT && m.type() == MessageType.INTERACTIVE)
+                .map(m -> outbox.parseOptions(m.templateJson()));
     }
 
     @Transactional
@@ -211,4 +224,92 @@ public class ConversationService {
                 m.errorCode(), m.createdAt());
     }
 
+    // --- privacy (NFR-11, NFR-12). Callers: the privacy package, inside its own transaction. ---
+
+    /** @param phone international digits, e.g. 254712345678 */
+    @Transactional(readOnly = true)
+    public Optional<CustomerSummary> findCustomer(TenantId tenantId, String phone) {
+        return customers.findByPhone(tenantId, phone).map(c -> new CustomerSummary(c.id(), c.phone(), c.name(),
+                c.createdAt(), conversations.findIdsForCustomer(tenantId, c.id()).size()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<UUID> conversationIdsForCustomer(TenantId tenantId, UUID customerId) {
+        return conversations.findIdsForCustomer(tenantId, customerId);
+    }
+
+    /** NFR-12: the customer, their conversations and every message, for a data export. */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> exportCustomer(TenantId tenantId, UUID customerId) {
+        Customer c = customers.findById(tenantId, customerId)
+                .orElseThrow(() -> new ai.zamu.shared.web.NotFoundException("Customer not found"));
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("phone", c.phone());
+        out.put("name", c.name());
+        out.put("language", c.language());
+        out.put("opted_in_marketing", c.optedInMarketing());
+        out.put("opted_out_at", c.optedOutAt() == null ? null : c.optedOutAt().toString());
+        out.put("blocked", c.blocked());
+        out.put("first_contact", c.createdAt().toString());
+        java.util.List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        for (UUID id : conversations.findIdsForCustomer(tenantId, customerId)) {
+            Conversation conv = conversations.findById(tenantId, id).orElseThrow();
+            java.util.Map<String, Object> cm = new java.util.LinkedHashMap<>();
+            cm.put("id", id.toString());
+            cm.put("channel", conv.channel().name().toLowerCase(java.util.Locale.ROOT));
+            cm.put("status", conv.status().name().toLowerCase(java.util.Locale.ROOT));
+            java.util.List<java.util.Map<String, Object>> msgs = new java.util.ArrayList<>();
+            for (Message m : messages.findAllForConversation(tenantId, id)) {
+                java.util.Map<String, Object> mm = new java.util.LinkedHashMap<>();
+                mm.put("at", m.createdAt().toString());
+                mm.put("direction", m.direction().name().toLowerCase(java.util.Locale.ROOT));
+                mm.put("sender", m.sender().name().toLowerCase(java.util.Locale.ROOT));
+                mm.put("type", m.type().dbValue());
+                mm.put("body", m.body());
+                msgs.add(mm);
+            }
+            cm.put("messages", msgs);
+            list.add(cm);
+        }
+        out.put("conversations", list);
+        return out;
+    }
+
+    /**
+     * NFR-12: deletes the customer, their conversations and messages. Handovers and bookings must be deleted
+     * first by their packages.
+     */
+    @Transactional
+    public void deleteCustomer(TenantId tenantId, UUID customerId) {
+        for (UUID id : conversations.findIdsForCustomer(tenantId, customerId)) {
+            messages.deleteForConversation(tenantId, id);
+            conversations.delete(tenantId, id);
+        }
+        customers.delete(tenantId, customerId);
+    }
+
+    /** NFR-11: deletes conversations with no message since the cutoff, in batches. Returns how many. */
+    @Transactional
+    public int purgeInactiveSince(TenantId tenantId, Instant cutoff) {
+        List<UUID> ids = conversations.findIdsInactiveSince(tenantId, cutoff, 500);
+        handovers.deleteForConversations(tenantId, ids);
+        for (UUID id : ids) {
+            messages.deleteForConversation(tenantId, id);
+            conversations.delete(tenantId, id);
+        }
+        return ids.size();
+    }
+
+    /** NFR-11: offboarding purge of every conversation, message and customer. */
+    @Transactional
+    public int purgeTenant(TenantId tenantId) {
+        List<UUID> ids = conversations.findAllIds(tenantId);
+        handovers.deleteAllForTenant(tenantId);
+        for (UUID id : ids) {
+            messages.deleteForConversation(tenantId, id);
+            conversations.delete(tenantId, id);
+        }
+        customers.deleteAllForTenant(tenantId);
+        return ids.size();
+    }
 }

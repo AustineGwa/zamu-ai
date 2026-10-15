@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import ai.zamu.bookings.BookingService;
+import ai.zamu.tenants.TenantService;
 import ai.zamu.handovers.HandoverService;
 import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.security.ZamuPrincipal;
@@ -31,11 +33,16 @@ class InboxController {
 
     private final ConversationService conversations;
     private final HandoverService handovers;
+    private final BookingService bookings;
+    private final TenantService tenants;
     private final LiveUpdates live;
 
-    InboxController(ConversationService conversations, HandoverService handovers, LiveUpdates live) {
+    InboxController(ConversationService conversations, HandoverService handovers, BookingService bookings,
+            TenantService tenants, LiveUpdates live) {
         this.conversations = conversations;
         this.handovers = handovers;
+        this.bookings = bookings;
+        this.tenants = tenants;
         this.live = live;
     }
 
@@ -125,5 +132,9 @@ class InboxController {
         model.addAttribute("conversation", conversations.detail(tenantId, conversationId));
         model.addAttribute("handover", handovers.current(tenantId, conversationId).orElse(null));
         model.addAttribute("templates", conversations.approvedTemplates(tenantId));
+        // Spec: Conversation screen, customer panel with bookings.
+        ConversationDetail detail = (ConversationDetail) model.getAttribute("conversation");
+        model.addAttribute("customerBookings", bookings.forCustomer(tenantId, detail.customerId(), 5));
+        model.addAttribute("zone", java.time.ZoneId.of(tenants.get(tenantId).timezone()));
     }
 }

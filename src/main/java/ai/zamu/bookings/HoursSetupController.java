@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import ai.zamu.shared.ids.TenantId;
@@ -25,13 +26,40 @@ import ai.zamu.tenants.TenantService;
 class HoursSetupController {
 
     private final BusinessHoursService hours;
+    private final BookingSetupService setup;
     private final TenantService tenants;
     private final AdminTenantScope scope;
 
-    HoursSetupController(BusinessHoursService hours, TenantService tenants, AdminTenantScope scope) {
+    HoursSetupController(BusinessHoursService hours, BookingSetupService setup, TenantService tenants,
+            AdminTenantScope scope) {
         this.hours = hours;
+        this.setup = setup;
         this.tenants = tenants;
         this.scope = scope;
+    }
+
+    /** Holidays: whole days the business is closed (spec: holidays table; BK-02). */
+    @PostMapping("/holidays")
+    String addHoliday(@PathVariable UUID tenantId, @RequestParam(required = false) String day,
+            @RequestParam(required = false) String note, RedirectAttributes redirect) {
+        TenantId id = scope.forPath(tenantId);
+        try {
+            setup.addHoliday(id, java.time.LocalDate.parse(day == null ? "" : day.strip()),
+                    note == null ? null : note.strip());
+            redirect.addFlashAttribute("success", "Closed day added.");
+        } catch (java.time.format.DateTimeParseException e) {
+            redirect.addFlashAttribute("error", "Choose a date.");
+        } catch (BookingRuleException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/tenants/" + tenantId + "/setup/hours";
+    }
+
+    @PostMapping("/holidays/{holidayId}/remove")
+    String removeHoliday(@PathVariable UUID tenantId, @PathVariable UUID holidayId, RedirectAttributes redirect) {
+        setup.removeHoliday(scope.forPath(tenantId), holidayId);
+        redirect.addFlashAttribute("success", "Closed day removed.");
+        return "redirect:/admin/tenants/" + tenantId + "/setup/hours";
     }
 
     @GetMapping
@@ -64,6 +92,7 @@ class HoursSetupController {
     private void addModel(TenantId id, Model model) {
         model.addAttribute("tenant", tenants.get(id));
         model.addAttribute("step", "hours");
+        model.addAttribute("holidays", setup.upcomingHolidays(id));
         model.addAttribute("dayNames", Arrays.stream(DayOfWeek.values()).map(BusinessHoursService::label).toList());
     }
 }

@@ -30,9 +30,11 @@
                 </p>
             </div>
 
-            <figure class="relative mx-auto w-full max-w-sm">
+            <figure class="relative mx-auto w-full max-w-md lg:max-w-none">
+                <!-- Photo: Brian Kungu on Unsplash -->
+                <img th:replace="~{fragments/photo :: img('1768244016569-1b4553623961', 'A smiling business owner reading a message on her phone', 560, 640, 'aspect-[7/8] w-full rounded-3xl object-cover shadow-xl', 'eager')}">
                 <!-- Voice: a call answered while the chat goes on. -->
-                <div class="absolute -left-4 top-24 z-10 hidden items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-xl ring-1 ring-gray-200 sm:flex lg:-left-16" aria-hidden="true">
+                <div class="absolute right-3 top-4 z-10 flex items-center gap-3 rounded-xl bg-white/95 px-3 py-2.5 shadow-lg ring-1 ring-gray-200 sm:-right-6 sm:top-8 sm:px-4 sm:py-3" aria-hidden="true">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
                     </span>
@@ -41,34 +43,20 @@
                         <span class="block text-xs text-ink-600">0722 XXX 456 · booked for Monday</span>
                     </span>
                 </div>
-                <div class="overflow-hidden rounded-[2rem] border-[10px] border-ink-900 bg-wa-wall shadow-xl">
-                    <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white" aria-hidden="true">AB</span>
-                        <div class="leading-tight">
-                            <p class="text-sm font-semibold">Afya Bora Clinic</p>
-                            <p class="text-xs text-ink-600">Business account</p>
-                        </div>
+                <!-- WhatsApp: the same business, answering in Swahili at 11pm. -->
+                <div class="absolute -bottom-10 left-3 z-10 w-[82%] max-w-[19rem] overflow-hidden rounded-2xl bg-wa-wall shadow-2xl ring-1 ring-black/10 sm:-left-6 lg:-left-8">
+                    <div class="flex items-center gap-2.5 border-b border-gray-200 bg-white px-3 py-2">
+                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white" aria-hidden="true">AB</span>
+                        <p class="text-xs font-semibold leading-tight">Afya Bora Clinic<span class="block font-normal text-ink-600">Business account</span></p>
                     </div>
-                    <div class="flex flex-col gap-2 px-3 py-4" aria-label="Example WhatsApp conversation">
-                        <p class="chat-in">Habari, mnafungua saa ngapi Jumamosi? Na consultation ni pesa ngapi?<span class="chat-time">23:04</span></p>
-                        <p class="chat-out">Habari! Jumamosi tunafungua saa 2 asubuhi hadi saa 7 mchana. Consultation ni KES 2,000. Ungependa kuweka miadi?<span class="chat-time">23:04</span></p>
-                        <p class="chat-in">Ndiyo, Jumamosi asubuhi<span class="chat-time">23:05</span></p>
-                        <div class="chat-out">
-                            Nafasi zilizopo Jumamosi, 18 Okt:
-                            <span class="mt-2 grid grid-cols-3 gap-1 text-center text-xs font-semibold text-brand-700">
-                                <span class="rounded bg-white py-1.5">9:00</span>
-                                <span class="rounded bg-white py-1.5">9:30</span>
-                                <span class="rounded bg-white py-1.5">11:00</span>
-                            </span>
-                            <span class="chat-time">23:05</span>
-                        </div>
-                        <p class="chat-in">9:30<span class="chat-time">23:05</span></p>
-                        <p class="chat-out">Amana ya KES 500 inahitajika. Nimetuma ombi la M-Pesa kwa 0712 XXX 123, tafadhali weka PIN.<span class="chat-time">23:05</span></p>
-                        <p class="chat-out"><strong>Malipo yamepokelewa:</strong> KES 500, M-Pesa TJ4K2LQ8XZ. Miadi yako ni Jumamosi 18 Okt saa 9:30.<span class="chat-time">23:06</span></p>
+                    <div class="flex flex-col gap-1.5 px-2.5 py-3 text-[0.8125rem]" aria-label="Example WhatsApp conversation">
+                        <p class="chat-in">Habari, consultation ni pesa ngapi? Mnafungua Jumamosi?<span class="chat-time">23:04</span></p>
+                        <p class="chat-out">Habari! Consultation ni KES 2,000. Jumamosi tunafungua saa 2 asubuhi hadi saa 7 mchana.<span class="chat-time">23:04</span></p>
+                        <p class="chat-out"><strong>Malipo yamepokelewa:</strong> KES 500. Miadi yako ni Jumamosi saa 9:30.<span class="chat-time">23:06</span></p>
                     </div>
                 </div>
-                <figcaption class="mt-3 text-center text-sm text-ink-600">
-                    An example WhatsApp chat, while Zamu answers a phone call at the same time. The customer asks in Swahili at 11pm, books and pays a deposit in two minutes.
+                <figcaption class="mt-24 text-center text-sm text-ink-600">
+                    Zamu answers a call and a WhatsApp chat at the same time. The customer asks in Swahili at 11pm, books and pays a deposit in two minutes.
                 </figcaption>
             </figure>
         </div>
@@ -111,8 +99,11 @@
                 <p class="mt-4 text-sm text-brand-200">Voice is in early access and rolling out to Growth, Business and Enterprise plans.</p>
             </div>
 
+            <div>
+            <!-- Photo: Centre for Ageing Better on Unsplash -->
+            <img th:replace="~{fragments/photo :: img('1702648156997-eaa417d98b9e', 'A customer smiling while talking on the phone', 640, 360, 'aspect-[16/9] w-full rounded-xl object-cover', 'lazy')}">
             <!-- Example call notes, as they appear in the Zamu inbox. -->
-            <figure class="rounded-xl bg-white p-5 text-ink-900 shadow-2xl sm:p-6">
+            <figure class="relative mx-3 -mt-16 rounded-xl bg-white p-5 text-ink-900 shadow-2xl sm:mx-6 sm:p-6">
                 <div class="flex items-center justify-between gap-3 border-b border-gray-200 pb-4">
                     <div class="flex items-center gap-3">
                         <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-700" aria-hidden="true">
@@ -147,14 +138,21 @@
                     An example of the notes your team sees after Zamu takes a call.
                 </figcaption>
             </figure>
+            </div>
         </div>
     </section>
 
     <!-- What it does -->
     <section id="features" class="scroll-mt-20">
         <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Your whole front desk, on the phone and on WhatsApp</h2>
-            <p class="mt-3 max-w-2xl text-ink-700">Zamu answers under your business name, from information you approve, on whichever channel your customer picks.</p>
+            <div class="grid items-center gap-8 md:grid-cols-[1.1fr_1fr]">
+                <div>
+                    <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Your whole front desk, on the phone and on WhatsApp</h2>
+                    <p class="mt-3 max-w-2xl text-ink-700">Zamu answers under your business name, from information you approve, on whichever channel your customer picks. You get on with the work in front of you.</p>
+                </div>
+                <!-- Photo: Ali Mkumbwa on Unsplash -->
+                <img th:replace="~{fragments/photo :: img('1687422811062-a966b55cb217', 'A workshop owner smiling at a message on his phone between jobs', 640, 400, 'aspect-[8/5] w-full rounded-2xl object-cover', 'lazy')}">
+            </div>
             <ul class="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
                 <li class="border-t-2 border-brand-600 pt-5">
                     <svg class="h-7 w-7 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
@@ -194,31 +192,59 @@
     <section class="bg-paper">
         <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
             <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Made for businesses whose customers call and WhatsApp</h2>
-            <div class="mt-10 divide-y divide-gray-300 border-y border-gray-300">
-                <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
-                    <h3 class="text-lg font-semibold">Clinics and dental practices</h3>
-                    <p class="text-ink-700">The phone rings while reception is with a patient, and after-hours enquiries go to the clinic down the road.</p>
-                    <p class="text-ink-900">Zamu answers calls and chats about fees, hours and doctor availability, books and reminds, and takes consultation deposits.</p>
-                </div>
-                <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
-                    <h3 class="text-lg font-semibold">Salons, spas and barbershops</h3>
-                    <p class="text-ink-700">Bookings arrive by message and get double-booked or forgotten.</p>
-                    <p class="text-ink-900">Zamu shows open slots, books the right stylist, takes deposits and sends reminders that cut no-shows.</p>
-                </div>
-                <div class="grid gap-3 py-6 md:grid-cols-[14rem_1fr_1fr] md:gap-8">
-                    <h3 class="text-lg font-semibold">Schools and colleges</h3>
-                    <p class="text-ink-700">Admissions and fee questions flood one phone line every January, May and September.</p>
-                    <p class="text-ink-900">Zamu takes every one of those calls at once, answers admissions questions and sends fee structures by WhatsApp.</p>
-                </div>
-            </div>
+            <ul class="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                <li class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Eben Kassaye on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1643297654416-05795d62e39c', 'A smiling doctor in a white coat holding a stethoscope', 480, 320, 'aspect-[3/2] w-full object-cover', 'lazy')}">
+                    <div class="flex flex-1 flex-col p-5">
+                        <h3 class="text-lg font-semibold">Clinics and dental practices</h3>
+                        <p class="mt-2 text-sm text-ink-600">The phone rings while reception is with a patient, and after-hours enquiries go to the clinic down the road.</p>
+                        <p class="mt-3 text-ink-900">Zamu answers calls and chats about fees, hours and doctor availability, books and reminds, and takes consultation deposits.</p>
+                    </div>
+                </li>
+                <li class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Roman Derrick Okello on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1677739464359-0213d2ae2ccd', 'A stylist braiding a client’s hair in a salon', 480, 320, 'aspect-[3/2] w-full object-cover', 'lazy')}">
+                    <div class="flex flex-1 flex-col p-5">
+                        <h3 class="text-lg font-semibold">Salons, spas and barbershops</h3>
+                        <p class="mt-2 text-sm text-ink-600">Bookings arrive by message in the middle of a client’s hair, and get double-booked or forgotten.</p>
+                        <p class="mt-3 text-ink-900">Zamu shows open slots, books the right stylist, takes deposits and sends reminders that cut no-shows.</p>
+                    </div>
+                </li>
+                <li class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Ali Mkumbwa on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1687422808278-d17b09489ed1', 'A cook in a restaurant kitchen checking an order on his phone', 480, 320, 'aspect-[3/2] w-full object-cover', 'lazy')}">
+                    <div class="flex flex-1 flex-col p-5">
+                        <h3 class="text-lg font-semibold">Restaurants and cafés</h3>
+                        <p class="mt-2 text-sm text-ink-600">Menu questions and orders pile up on WhatsApp during the lunch rush, when nobody can reply.</p>
+                        <p class="mt-3 text-ink-900">Zamu answers menu, price, hours and delivery questions at once, and puts every order in front of your staff.</p>
+                    </div>
+                </li>
+                <li class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+                    <!-- Photo: Ali Mkumbwa on Unsplash -->
+                    <img th:replace="~{fragments/photo :: img('1687422809654-579d81c29d32', 'A shop owner at her fruit stall reading a message on her phone', 480, 320, 'aspect-[3/2] w-full object-cover', 'lazy')}">
+                    <div class="flex flex-1 flex-col p-5">
+                        <h3 class="text-lg font-semibold">Shops and market stalls</h3>
+                        <p class="mt-2 text-sm text-ink-600">Customers message to ask the price, whether you have it, and where to find you, while you serve the queue.</p>
+                        <p class="mt-3 text-ink-900">Zamu answers from your price list and location day and night, and brings you in to close the sale.</p>
+                    </div>
+                </li>
+            </ul>
+            <p class="mt-8 text-ink-700"><strong class="text-ink-900">Schools and colleges too:</strong> Zamu takes every admissions call at once in January, May and September, and sends fee structures by WhatsApp.</p>
         </div>
     </section>
 
     <!-- How it works: a real sequence, so the steps are numbered. -->
     <section id="how-it-works" class="scroll-mt-20">
         <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Live in five working days, and we do the setup</h2>
-            <p class="mt-3 max-w-2xl text-ink-700">You tell us about your business. We build, connect and test everything, then train your team.</p>
+            <div class="grid items-center gap-8 md:grid-cols-[1.1fr_1fr]">
+                <div>
+                    <h2 class="max-w-2xl font-display text-3xl font-semibold tracking-tight">Live in five working days, and we do the setup</h2>
+                    <p class="mt-3 max-w-2xl text-ink-700">You tell us about your business. We build, connect and test everything, then train your team.</p>
+                </div>
+                <!-- Photo: Christina @ wocintechchat.com on Unsplash -->
+                <img th:replace="~{fragments/photo :: img('1573497019418-b400bb3ab074', 'A smiling professional at her desk', 640, 400, 'aspect-[8/5] w-full rounded-2xl object-cover', 'lazy')}">
+            </div>
             <ol class="mt-10 grid gap-8 md:grid-cols-5 md:gap-6">
                 <li>
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">1</span>
@@ -339,9 +365,13 @@
     <!-- Closing call to action -->
     <section class="bg-brand-600 text-white">
         <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between">
-            <div>
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <!-- Photo: Ali Mkumbwa on Unsplash -->
+                <img th:replace="~{fragments/photo :: img('1687422808565-929533931584', 'A market trader giving a thumbs up', 160, 160, 'h-28 w-28 shrink-0 rounded-full object-cover ring-4 ring-white/30', 'lazy')}">
+                <div>
                 <h2 class="font-display text-3xl font-semibold tracking-tight">Let Zamu take the next shift</h2>
                 <p class="mt-2 max-w-xl text-brand-50">Zamu is Swahili for a turn on duty. Let it answer your calls and chats, and tell us about your business to book your kickoff call.</p>
+                </div>
             </div>
             <a th:href="@{/signup}" class="btn-inverse px-6 text-base">Start your free trial</a>
         </div>

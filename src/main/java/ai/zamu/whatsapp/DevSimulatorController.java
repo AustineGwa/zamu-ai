@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import ai.zamu.conversations.ConversationService;
 import ai.zamu.shared.ids.TenantId;
 import ai.zamu.shared.phone.KenyanPhone;
 
@@ -31,28 +32,36 @@ import tools.jackson.databind.ObjectMapper;
 class DevSimulatorController {
 
     private final WhatsAppAccountService accounts;
+    private final ConversationService conversations;
     private final WhatsAppWebhookService webhooks;
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
-    DevSimulatorController(WhatsAppAccountService accounts, WhatsAppWebhookService webhooks, ObjectMapper objectMapper,
-            Clock clock) {
+    DevSimulatorController(WhatsAppAccountService accounts, ConversationService conversations,
+            WhatsAppWebhookService webhooks, ObjectMapper objectMapper, Clock clock) {
         this.accounts = accounts;
+        this.conversations = conversations;
         this.webhooks = webhooks;
         this.objectMapper = objectMapper;
         this.clock = clock;
     }
 
     @GetMapping
-    String page(TenantId tenantId, Model model) {
+    String page(TenantId tenantId, @RequestParam(name = "as", required = false) String as, Model model) {
         model.addAttribute("account", accounts.view(tenantId).orElse(null));
+        Object phone = as != null ? as : model.getAttribute("phone");
+        if (as != null && !model.containsAttribute("phone")) {
+            model.addAttribute("phone", as);
+        }
+        String from = phone == null ? null : KenyanPhone.normalise(phone.toString()).orElse(null);
+        model.addAttribute("options", from == null ? null : conversations.latestOptions(tenantId, from).orElse(null));
         return "whatsapp/dev-simulator";
     }
 
     @PostMapping
     String send(TenantId tenantId, @RequestParam String phone, @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "text") String kind, @RequestParam(required = false) String text,
-            RedirectAttributes redirect) {
+            @RequestParam(required = false) String replyId, RedirectAttributes redirect) {
         WhatsAppAccountView account = accounts.view(tenantId).orElse(null);
         String from = KenyanPhone.normalise(phone).orElse(null);
         redirect.addFlashAttribute("phone", phone);
@@ -69,17 +78,23 @@ class DevSimulatorController {
             redirect.addFlashAttribute("error", "Type a message.");
             return "redirect:/dev/whatsapp";
         }
-        webhooks.receive(objectMapper.writeValueAsBytes(body(account, from, name, kind, text)));
+        webhooks.receive(objectMapper.writeValueAsBytes(body(account, from, name, kind, text, replyId)));
         redirect.addFlashAttribute("success", "Sent as the customer. Zamu's reply appears in the inbox in a moment.");
+        redirect.addAttribute("as", from);
         return "redirect:/dev/whatsapp";
     }
 
-    private Map<String, Object> body(WhatsAppAccountView account, String from, String name, String kind, String text) {
+    private Map<String, Object> body(WhatsAppAccountView account, String from, String name, String kind, String text,
+            String replyId) {
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("from", from);
         message.put("id", "wamid.dev." + UUID.randomUUID());
         message.put("timestamp", String.valueOf(clock.instant().getEpochSecond()));
-        if ("image".equals(kind)) {
+        if ("reply".equals(kind) && replyId != null) { // a tapped list row, as Meta sends it
+            message.put("type", "interactive");
+            message.put("interactive", Map.of("type", "list_reply",
+                    "list_reply", Map.of("id", replyId, "title", text == null ? "" : text)));
+        } else if ("image".equals(kind)) {
             message.put("type", "image");
             message.put("image", Map.of("id", "dev-media-" + UUID.randomUUID(), "mime_type", "image/jpeg"));
         } else {

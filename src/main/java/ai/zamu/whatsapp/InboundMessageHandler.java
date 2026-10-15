@@ -111,6 +111,7 @@ class InboundMessageHandler implements JobHandler {
         MessageType messageType;
         String text = null;
         String mediaRef = null;
+        String replyId = null;
         switch (type) {
             case "text" -> {
                 messageType = MessageType.TEXT;
@@ -122,10 +123,12 @@ class InboundMessageHandler implements JobHandler {
                 JsonNode reply = interactive.has("button_reply") ? interactive.path("button_reply")
                         : interactive.path("list_reply");
                 text = reply.path("title").asString("");
+                replyId = reply.path("id").asString("");
             }
-            case "button" -> {
+            case "button" -> { // a quick-reply button on a template, e.g. the reminder (BK-11)
                 messageType = MessageType.INTERACTIVE;
                 text = message.path("button").path("text").asString("");
+                replyId = message.path("button").path("payload").asString("");
             }
             default -> {
                 messageType = MessageType.MEDIA;
@@ -134,7 +137,7 @@ class InboundMessageHandler implements JobHandler {
             }
         }
         return new InboundMessage(Channel.WHATSAPP, tenantId, from, profileName, message.path("id").asString(""),
-                messageType, text, mediaRef, receivedAt);
+                messageType, text, mediaRef, receivedAt, replyId);
     }
 
     private static String blankToNull(String s) {
